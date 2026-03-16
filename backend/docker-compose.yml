@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: boa_hotline_postgres
+    environment:
+      POSTGRES_DB: boa_hotline
+      POSTGRES_USER: boa
+      POSTGRES_PASSWORD: boa
+    ports:
+      - "5432:5432"
+    volumes:
+      - boa_hotline_pg:/var/lib/postgresql/data
+
+volumes:
+  boa_hotline_pg:
+
