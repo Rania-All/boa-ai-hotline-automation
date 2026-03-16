@@ -1,4 +1,5 @@
 # Java
+backend/target/
 target/
 *.class
 *.jar
