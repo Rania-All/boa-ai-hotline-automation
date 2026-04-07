@@ -19,4 +19,8 @@ export interface Conversation {
 export interface AskResponse {
   answer: string;
   confidence: number;
+  type?: string;
+  intent?: string;
+  emailStatus?: string;
+  rpaStatus?: string;
 }

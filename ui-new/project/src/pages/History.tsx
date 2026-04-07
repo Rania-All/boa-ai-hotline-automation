@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, Filter, Trash2, ArrowLeft } from 'lucide-react';
+import { RefreshCw, Trash2, ArrowLeft } from 'lucide-react';
 import { clearHistory, getHistory } from '../services/api';
 import SentimentIndicator from '../components/SentimentIndicator';
 import type { Conversation } from '../types';
@@ -7,7 +7,6 @@ import type { Conversation } from '../types';
 export default function History({ onBackToChat }: { onBackToChat: () => void }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterConfidence, setFilterConfidence] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
   useEffect(() => {
     loadHistory();
@@ -36,18 +35,7 @@ export default function History({ onBackToChat }: { onBackToChat: () => void }) 
     });
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.7) return 'text-emerald-700 bg-emerald-50';
-    if (confidence >= 0.4) return 'text-orange-600 bg-orange-50';
-    return 'text-rose-700 bg-rose-50';
-  };
-
-  const filteredConversations = conversations.filter(conv => {
-    if (filterConfidence === 'high') return conv.confidence >= 0.7;
-    if (filterConfidence === 'medium') return conv.confidence >= 0.4 && conv.confidence < 0.7;
-    if (filterConfidence === 'low') return conv.confidence < 0.4;
-    return true;
-  });
+  const filteredConversations = conversations.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const handleClear = async () => {
     if (conversations.length === 0) return;
@@ -64,7 +52,7 @@ export default function History({ onBackToChat }: { onBackToChat: () => void }) 
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-md">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Historique des conversations</h2>
             <p className="text-sm text-gray-600 mt-1">
@@ -99,25 +87,6 @@ export default function History({ onBackToChat }: { onBackToChat: () => void }) 
             </button>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-600" />
-          <div className="flex gap-2">
-            {['all', 'high', 'medium', 'low'].map(level => (
-              <button
-                key={level}
-                onClick={() => setFilterConfidence(level as any)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                  filterConfidence === level
-                    ? 'bg-[#0B3D91] text-white shadow-md'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {level === 'all' ? 'Tous' : level === 'high' ? 'Haute confiance' : level === 'medium' ? 'Confiance moyenne' : 'Basse confiance'}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
@@ -147,9 +116,6 @@ export default function History({ onBackToChat }: { onBackToChat: () => void }) 
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Sentiment
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Confiance
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -166,15 +132,6 @@ export default function History({ onBackToChat }: { onBackToChat: () => void }) 
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <SentimentIndicator text={conv.answer} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full font-semibold ${getConfidenceColor(
-                            conv.confidence
-                          )}`}
-                        >
-                          {Math.round(conv.confidence * 100)}%
-                        </span>
                       </td>
                     </tr>
                   ))}
