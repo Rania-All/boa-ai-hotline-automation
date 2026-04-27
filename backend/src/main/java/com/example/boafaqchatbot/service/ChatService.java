@@ -8,9 +8,13 @@ import com.example.boafaqchatbot.nlp.Intent;
 import com.example.boafaqchatbot.nlp.NlpService;
 import com.example.boafaqchatbot.rpa.UiPathOrchestratorClient;
 import com.example.boafaqchatbot.util.TextNorm;
+import com.example.boafaqchatbot.util.VectorMath;
+import com.example.boafaqchatbot.ai.OllamaClient;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -22,14 +26,16 @@ public class ChatService {
     private final ChatHistoryService history;
     private final UiPathOrchestratorClient rpa;
     private final OllamaRagService ollamaRag;
-    private final JaroWinklerSimilarity similarity = new JaroWinklerSimilarity();
+    private final OllamaClient ollama;
+    private final JaroWinklerSimilarity stringSimilarity = new JaroWinklerSimilarity();
 
-    public ChatService(FaqStore store, NlpService nlp, ChatHistoryService history, UiPathOrchestratorClient rpa, OllamaRagService ollamaRag) {
+    public ChatService(FaqStore store, NlpService nlp, ChatHistoryService history, UiPathOrchestratorClient rpa, OllamaRagService ollamaRag, OllamaClient ollama) {
         this.store = store;
         this.nlp = nlp;
         this.history = history;
         this.rpa = rpa;
         this.ollamaRag = ollamaRag;
+        this.ollama = ollama;
     }
 
     public ChatResponse reply(String message, String sessionId) {
@@ -40,7 +46,7 @@ public class ChatService {
 
         // 1) FAQ similarity first
         ChatResponse faqResponse = similarityEngine(message);
-        if (faqResponse.confidence() >= 0.75) {
+        if (faqResponse.confidence() >= 0.65) {
             history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId);
             return faqResponse;
         }
@@ -99,29 +105,69 @@ public class ChatService {
         );
     }
 
-    /** Similarity engine on FAQ */
+    /** Advanced Hybrid Similarity (Semantic + Keyword Overlap) */
     private ChatResponse similarityEngine(String message) {
-        String normalized = TextNorm.norm(message);
-        double bestScore = 0;
-        FaqItem best = null;
+        String normalizedMsg = TextNorm.norm(message).toLowerCase();
+        double[] userEmbedding = ollama.embeddings(message);
+        
+        List<ScoredMatch> matches = new ArrayList<>();
+        String[] queryTokens = normalizedMsg.split("\\s+");
 
         for (FaqItem f : store.all()) {
-            double score = similarity.apply(normalized, f.normQuestion());
-            if (score > bestScore) {
-                bestScore = score;
-                best = f;
+            double semanticScore = 0;
+            if (userEmbedding != null && f.embedding() != null && f.embedding().length == userEmbedding.length) {
+                semanticScore = VectorMath.cosineSimilarity(userEmbedding, f.embedding());
             }
+            
+            // Keyword Overlap Scoring
+            String faqQNorm = f.normQuestion().toLowerCase();
+            int matchedTokens = 0;
+            int validTokens = 0;
+            for (String qt : queryTokens) {
+                if (qt.length() > 2) { // Ignore short words like "le", "la", "un"
+                    validTokens++;
+                    if (faqQNorm.contains(qt)) {
+                        matchedTokens++;
+                    }
+                }
+            }
+            
+            double tokenScore = 0;
+            if (validTokens > 0) {
+                double overlapRatio = (double) matchedTokens / validTokens;
+                // Length penalty: prefers shorter FAQ questions (definitions) when keywords match
+                double lengthFactor = Math.min(1.0, 30.0 / Math.max(1, f.question().length()));
+                tokenScore = (overlapRatio * 0.8) + (lengthFactor * 0.2);
+            }
+            
+            // Take the best of Semantic and Keyword Match
+            double finalScore = Math.max(semanticScore, tokenScore);
+
+            matches.add(new ScoredMatch(f, finalScore));
         }
 
-        if (best == null || bestScore < 0.75) {
+        matches.sort((a, b) -> Double.compare(b.score(), a.score()));
+        
+        System.out.println("--- 🔍 Résultats Sémantique + Mots-Clés pour: [" + message + "] ---");
+        for (int i = 0; i < Math.min(3, matches.size()); i++) {
+            ScoredMatch m = matches.get(i);
+            System.out.println(String.format("   %d. Score: %.3f | Q: %s", (i+1), m.score(), m.faq().question()));
+        }
+
+        ScoredMatch best = matches.isEmpty() ? null : matches.get(0);
+
+        // We use 0.65 as threshold, which is easily achievable by good semantic or keyword match
+        if (best == null || best.score() < 0.65) { 
             return new ChatResponse(
                     "Je n'ai pas compris votre demande. Pouvez-vous reformuler ?",
-                    bestScore, null, List.of()
+                    best != null ? best.score() : 0, null, List.of()
             );
         }
 
-        return new ChatResponse(best.answer(), bestScore, best.question(), List.of());
+        return new ChatResponse(best.faq().answer(), best.score(), best.faq().question(), List.of());
     }
+
+    private record ScoredMatch(FaqItem faq, double score) {}
 
     /** Quick response for NLP intents */
     private ChatResponse quick(String text) {

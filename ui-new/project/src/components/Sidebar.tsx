@@ -1,4 +1,5 @@
-import { MessageSquare, History, Zap, TrendingUp, Brain } from 'lucide-react';
+import { MessageSquare, History, Zap, TrendingUp, Brain, Building } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import boaLogo from '../assets/boa-logo.png';
 
 interface SidebarProps {
@@ -7,6 +8,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="w-64 bg-gradient-to-b from-[#0B3D91] via-[#08306B] to-[#041B3A] text-white h-screen flex flex-col shadow-2xl">
       <div className="p-6 border-b border-white/10 bg-gradient-to-r from-[#0B3D91] to-transparent">
@@ -51,6 +54,14 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         >
           <History size={20} />
           <span className="font-medium">Historique des échanges</span>
+        </button>
+
+        <button
+          onClick={() => navigate('/bank/login')}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-white/90 hover:bg-white/10 mt-4 border border-white/20`}
+        >
+          <Building size={20} className="text-[#35B8C6]" />
+          <span className="font-medium">Portail Bancaire</span>
         </button>
       </nav>
 

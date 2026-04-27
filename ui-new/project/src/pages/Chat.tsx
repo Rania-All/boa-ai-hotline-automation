@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, CheckCircle, Zap, MessageCircle, TrendingUp, PlusCircle } from 'lucide-react';
+import { Send, TrendingUp, PlusCircle } from 'lucide-react';
 import MessageBubble from '../components/MessageBubble';
 import TypingIndicator from '../components/TypingIndicator';
 import QuickActions from '../components/QuickActions';
@@ -66,7 +66,6 @@ export default function Chat() {
   };
 
   const generateSuggestions = () => {
-    const botMessages = messages.filter(m => !m.isUser).slice(-3);
     const contextualSuggestions = [
       "Peux-tu expliquer plus ?",
       "Comment faire ?",
@@ -204,7 +203,7 @@ export default function Chat() {
           <div key={msg.id} className="animate-fadeIn">
             <MessageBubble
               message={msg.isUser ? msg.question : msg.answer}
-              isUser={msg.isUser}
+              isUser={!!msg.isUser}
               timestamp={msg.timestamp}
             />
             {!msg.isUser && index === messages.length - 1 && suggestions.length > 0 && (

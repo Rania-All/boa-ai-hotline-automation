@@ -1,10 +1,20 @@
 import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Chat from './pages/Chat';
 import History from './pages/History';
 
-function App() {
+// Bank Imports
+import BankLayout from './components/bank/BankLayout';
+import BankLogin from './pages/bank/BankLogin';
+import BankRegister from './pages/bank/BankRegister';
+import DashboardHome from './pages/bank/DashboardHome';
+import TransferPage from './pages/bank/TransferPage';
+import CardsPage from './pages/bank/CardsPage';
+import ServicesPage from './pages/bank/ServicesPage';
+
+function ChatbotApp() {
   const [currentPage, setCurrentPage] = useState<'chat' | 'history'>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -43,6 +53,26 @@ function App() {
         )}
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      {/* Chatbot Route */}
+      <Route path="/*" element={<ChatbotApp />} />
+
+      {/* Bank Routes */}
+      <Route path="/bank/login" element={<BankLogin />} />
+      <Route path="/bank/register" element={<BankRegister />} />
+      <Route path="/bank" element={<BankLayout />}>
+        <Route path="dashboard" element={<DashboardHome />} />
+        <Route path="transfer" element={<TransferPage />} />
+        <Route path="cards" element={<CardsPage />} />
+        <Route path="services" element={<ServicesPage />} />
+        <Route index element={<Navigate to="/bank/dashboard" replace />} />
+      </Route>
+    </Routes>
   );
 }
 

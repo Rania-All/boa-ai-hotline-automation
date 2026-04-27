@@ -18,12 +18,12 @@ public class ChatHistoryService {
     }
 
     public List<ChatHistory> getAll() {
-        return repo.findAll();
+        return repo.findAllByOrderByCreatedAtDesc();
     }
 
     public List<ChatHistory> getAllBySessionId(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) return getAll();
-        return repo.findAllBySessionIdOrderByCreatedAtAsc(sessionId);
+        return repo.findAllBySessionIdOrderByCreatedAtDesc(sessionId);
     }
 
     public void clear() {

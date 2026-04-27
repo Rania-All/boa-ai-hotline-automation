@@ -10,19 +10,20 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class FaqStore {
 
     private final String excelPath;
+    private final FaqRepository repository;
+    private final com.example.boafaqchatbot.ai.OllamaClient ollama;
     private volatile List<FaqItem> items = List.of();
 
-    public FaqStore(@Value("${app.faq.excel-path}") String excelPath) {
+    public FaqStore(@Value("${app.faq.excel-path}") String excelPath, FaqRepository repository, com.example.boafaqchatbot.ai.OllamaClient ollama) {
         this.excelPath = excelPath;
+        this.repository = repository;
+        this.ollama = ollama;
         reload();
     }
 
@@ -32,15 +33,54 @@ public class FaqStore {
 
     public synchronized void reload() {
         try {
-            this.items = Collections.unmodifiableList(load());
-            System.out.println("✅ FAQ chargée : " + items.size() + " questions");
+            System.out.println("🧹 Nettoyage de la base FAQ pour synchronisation fraîche...");
+            repository.deleteAll(); // On vide pour être sûr que tout est recalculé proprement
+            syncExcelToDb();
+            this.items = Collections.unmodifiableList(repository.findAll());
+            System.out.println("✅ FAQ chargée : " + items.size() + " questions (avec embeddings frais)");
         } catch (Exception e) {
             System.err.println("⚠️ Impossible de charger la FAQ : " + e.getMessage());
             this.items = List.of();
         }
     }
 
-    private List<FaqItem> load() throws Exception {
+    private void syncExcelToDb() throws Exception {
+        List<FaqItem> excelItems = loadFromExcel();
+        System.out.println("📦 Sync: " + excelItems.size() + " items trouvés dans l'Excel");
+        int updated = 0;
+        int created = 0;
+
+        for (FaqItem item : excelItems) {
+            Optional<FaqItem> existing = repository.findByQuestion(item.question());
+            if (existing.isEmpty()) {
+                System.out.println("✨ Nouvelle question : " + item.question());
+                double[] emb = ollama.embeddings(item.question());
+                if (emb != null) {
+                    item.setEmbedding(emb);
+                    repository.save(item);
+                    created++;
+                } else {
+                    System.err.println("❌ Échec de génération d'embedding pour : " + item.question());
+                }
+            } else {
+                FaqItem f = existing.get();
+                if (f.embedding() == null || f.embedding().length == 0) {
+                    System.out.println("🔄 Embedding manquant pour : " + f.question());
+                    double[] emb = ollama.embeddings(f.question());
+                    if (emb != null) {
+                        f.setEmbedding(emb);
+                        repository.save(f);
+                        updated++;
+                    } else {
+                        System.err.println("❌ Échec de régénération d'embedding pour : " + f.question());
+                    }
+                }
+            }
+        }
+        System.out.println("✅ Sync terminé : " + created + " créés, " + updated + " mis à jour");
+    }
+
+    private List<FaqItem> loadFromExcel() throws Exception {
         ClassPathResource res = new ClassPathResource(excelPath);
         if (!res.exists()) {
             throw new IllegalStateException("Fichier introuvable : " + excelPath);

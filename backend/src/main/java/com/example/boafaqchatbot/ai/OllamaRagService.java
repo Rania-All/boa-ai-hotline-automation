@@ -3,7 +3,7 @@ package com.example.boafaqchatbot.ai;
 import com.example.boafaqchatbot.faq.FaqItem;
 import com.example.boafaqchatbot.faq.FaqStore;
 import com.example.boafaqchatbot.util.TextNorm;
-import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import com.example.boafaqchatbot.util.VectorMath;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,7 +15,6 @@ public class OllamaRagService {
 
     private final OllamaClient ollama;
     private final FaqStore store;
-    private final JaroWinklerSimilarity similarity = new JaroWinklerSimilarity();
 
     public OllamaRagService(OllamaClient ollama, FaqStore store) {
         this.ollama = ollama;
@@ -31,10 +30,13 @@ public class OllamaRagService {
     }
 
     private List<ScoredFaq> topK(String userQuestion, int k) {
-        String normalized = TextNorm.norm(userQuestion);
+        double[] userEmbedding = ollama.embeddings(userQuestion);
+        if (userEmbedding == null) return List.of();
+
         List<ScoredFaq> scored = new ArrayList<>();
         for (FaqItem f : store.all()) {
-            double score = similarity.apply(normalized, f.normQuestion());
+            if (f.embedding() == null || f.embedding().length == 0) continue;
+            double score = VectorMath.cosineSimilarity(userEmbedding, f.embedding());
             scored.add(new ScoredFaq(f, score));
         }
         scored.sort(Comparator.comparingDouble(ScoredFaq::score).reversed());
