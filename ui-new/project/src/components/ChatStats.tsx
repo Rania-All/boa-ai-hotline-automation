@@ -1,13 +1,11 @@
-import { BarChart3, Target, Zap } from 'lucide-react';
+import { BarChart3, Zap } from 'lucide-react';
 
 interface ChatStatsProps {
   messageCount: number;
   avgConfidence: number;
 }
 
-export default function ChatStats({ messageCount, avgConfidence }: ChatStatsProps) {
-  const confidencePercentage = Math.round(avgConfidence * 100);
-
+export default function ChatStats({ messageCount }: ChatStatsProps) {
   return (
     <div className="bg-gradient-to-r from-red-50 via-white to-orange-50 border-b border-red-100 px-6 py-4 shadow-sm animate-slideDown">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
@@ -22,24 +20,12 @@ export default function ChatStats({ messageCount, avgConfidence }: ChatStatsProp
         </div>
 
         <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-red-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="p-2 bg-orange-100 rounded-lg">
-            <Target size={20} className="text-orange-600" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-600 font-medium">Confiance</p>
-            <p className="text-lg font-bold text-gray-800">{confidencePercentage}%</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-red-100 shadow-sm hover:shadow-md transition-shadow">
           <div className="p-2 bg-green-100 rounded-lg">
             <Zap size={20} className="text-green-600" />
           </div>
           <div>
             <p className="text-xs text-gray-600 font-medium">Performance</p>
-            <p className="text-lg font-bold text-gray-800">
-              {confidencePercentage >= 80 ? 'Excellente' : confidencePercentage >= 60 ? 'Bonne' : 'Standard'}
-            </p>
+            <p className="text-lg font-bold text-gray-800">Excellente</p>
           </div>
         </div>
       </div>

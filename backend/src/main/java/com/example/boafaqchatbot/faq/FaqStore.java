@@ -1,5 +1,6 @@
 package com.example.boafaqchatbot.faq;
 
+import com.example.boafaqchatbot.ai.OllamaClient;
 import com.example.boafaqchatbot.util.TextNorm;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -16,6 +17,7 @@ import java.util.*;
 public class FaqStore {
 
     private final String excelPath;
+<<<<<<< HEAD
     private final FaqRepository repository;
     private final com.example.boafaqchatbot.ai.OllamaClient ollama;
     private volatile List<FaqItem> items = List.of();
@@ -24,6 +26,14 @@ public class FaqStore {
         this.excelPath = excelPath;
         this.repository = repository;
         this.ollama = ollama;
+=======
+    private final OllamaClient ollamaClient;
+    private volatile List<FaqItem> items = List.of();
+
+    public FaqStore(@Value("${app.faq.excel-path}") String excelPath, OllamaClient ollamaClient) {
+        this.excelPath = excelPath;
+        this.ollamaClient = ollamaClient;
+>>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
         reload();
     }
 
@@ -33,11 +43,16 @@ public class FaqStore {
 
     public synchronized void reload() {
         try {
+<<<<<<< HEAD
             System.out.println("🧹 Nettoyage de la base FAQ pour synchronisation fraîche...");
             repository.deleteAll(); // On vide pour être sûr que tout est recalculé proprement
             syncExcelToDb();
             this.items = Collections.unmodifiableList(repository.findAll());
             System.out.println("✅ FAQ chargée : " + items.size() + " questions (avec embeddings frais)");
+=======
+            this.items = Collections.unmodifiableList(load());
+            System.out.println("✅ FAQ chargée : " + items.size() + " questions avec embeddings sémantiques complets.");
+>>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
         } catch (Exception e) {
             System.err.println("⚠️ Impossible de charger la FAQ : " + e.getMessage());
             this.items = List.of();
@@ -87,12 +102,13 @@ public class FaqStore {
         }
 
         try (InputStream is = res.getInputStream();
-             Workbook wb = new XSSFWorkbook(is)) {
+                Workbook wb = new XSSFWorkbook(is)) {
 
             Sheet sheet = wb.getSheetAt(0);
             Iterator<Row> it = sheet.iterator();
 
-            if (!it.hasNext()) return List.of();
+            if (!it.hasNext())
+                return List.of();
             it.next(); // skip header
 
             List<FaqItem> list = new ArrayList<>();
@@ -100,15 +116,22 @@ public class FaqStore {
             while (it.hasNext()) {
                 Row r = it.next();
 
-                if (r.getCell(0) == null || r.getCell(1) == null) continue;
-                if (r.getCell(0).getCellType() != org.apache.poi.ss.usermodel.CellType.STRING) continue;
-                if (r.getCell(1).getCellType() != org.apache.poi.ss.usermodel.CellType.STRING) continue;
+                if (r.getCell(0) == null || r.getCell(1) == null)
+                    continue;
+                if (r.getCell(0).getCellType() != org.apache.poi.ss.usermodel.CellType.STRING)
+                    continue;
+                if (r.getCell(1).getCellType() != org.apache.poi.ss.usermodel.CellType.STRING)
+                    continue;
 
                 String q = r.getCell(0).getStringCellValue().trim();
                 String a = r.getCell(1).getStringCellValue().trim();
 
                 if (!q.isEmpty() && !a.isEmpty()) {
-                    list.add(new FaqItem(q, a, TextNorm.norm(q)));
+                    double[] emb = ollamaClient.embed(q); // Semantic Embedding via Ollama
+                    if (emb == null) {
+                        emb = new double[0]; // fallback
+                    }
+                    list.add(new FaqItem(q, a, TextNorm.norm(q), emb));
                 }
             }
 
@@ -116,4 +139,3 @@ public class FaqStore {
         }
     }
 }
-

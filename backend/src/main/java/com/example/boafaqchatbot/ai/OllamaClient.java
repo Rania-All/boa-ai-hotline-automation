@@ -24,8 +24,7 @@ public class OllamaClient {
             @Value("${ollama.model:llama3.1}") String model,
             @Value("${ollama.embedding-model:nomic-embed-text}") String embeddingModel,
             @Value("${ollama.enabled:true}") boolean enabled,
-            @Value("${ollama.timeout-ms:15000}") long timeoutMs
-    ) {
+            @Value("${ollama.timeout-ms:15000}") long timeoutMs) {
         this.webClient = builder.baseUrl(baseUrl).build();
         this.model = model;
         this.embeddingModel = embeddingModel;
@@ -33,6 +32,7 @@ public class OllamaClient {
         this.timeout = Duration.ofMillis(Math.max(1000, timeoutMs));
     }
 
+<<<<<<< HEAD
     public record GenerateResponse(String response) {}
     public record EmbeddingResponse(double[][] embeddings) {}
 
@@ -61,10 +61,17 @@ public class OllamaClient {
             System.err.println("❌ Ollama Embedding Error: " + e.getMessage());
             return null;
         }
+=======
+    public record GenerateResponse(String response) {
+    }
+
+    public record EmbedResponse(double[] embedding) {
+>>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
     }
 
     public String generate(String prompt) {
-        if (!enabled) return null;
+        if (!enabled)
+            return null;
 
         try {
             GenerateResponse res = webClient.post()
@@ -74,14 +81,14 @@ public class OllamaClient {
                     .bodyValue(Map.of(
                             "model", model,
                             "prompt", prompt,
-                            "stream", false
-                    ))
+                            "stream", false))
                     .retrieve()
                     .bodyToMono(GenerateResponse.class)
                     .timeout(timeout)
                     .block();
 
-            if (res == null || res.response() == null) return null;
+            if (res == null || res.response() == null)
+                return null;
             String text = res.response().trim();
             return text.isEmpty() ? null : text;
         } catch (WebClientResponseException e) {
@@ -90,5 +97,25 @@ public class OllamaClient {
             return null;
         }
     }
-}
 
+    public double[] embed(String text) {
+        if (!enabled)
+            return null;
+        try {
+            EmbedResponse res = webClient.post()
+                    .uri("/api/embeddings")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "model", model,
+                            "prompt", text))
+                    .retrieve()
+                    .bodyToMono(EmbedResponse.class)
+                    .timeout(timeout)
+                    .block();
+            return res != null ? res.embedding() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+}

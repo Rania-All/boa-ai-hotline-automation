@@ -1,5 +1,6 @@
 package com.example.boafaqchatbot.faq;
 
+<<<<<<< HEAD
 import jakarta.persistence.*;
 
 @Entity
@@ -44,4 +45,7 @@ public class FaqItem {
     public double[] embedding() { return embedding; }
 
     public void setEmbedding(double[] embedding) { this.embedding = embedding; }
+=======
+public record FaqItem(String question, String answer, String normQuestion, double[] embedding) {
+>>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
 }
