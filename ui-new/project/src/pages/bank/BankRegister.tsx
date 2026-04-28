@@ -74,7 +74,7 @@ const BankRegister = () => {
           </button>
           <div className="flex items-center space-x-2 text-blue-900">
             <UserPlus className="w-6 h-6" />
-            <span className="text-xl font-bold">Inscription Mockup</span>
+            <span className="text-xl font-bold">Inscription Client</span>
           </div>
         </div>
 

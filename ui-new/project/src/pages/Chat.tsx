@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-<<<<<<< HEAD
-import { Send, TrendingUp, PlusCircle } from 'lucide-react';
-=======
 import { Send, TrendingUp, PlusCircle, Building2, Sparkles } from 'lucide-react';
->>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
+import { useNavigate } from 'react-router-dom';
 import MessageBubble from '../components/MessageBubble';
 import TypingIndicator from '../components/TypingIndicator';
 import QuickActions from '../components/QuickActions';
@@ -15,6 +12,7 @@ import boaLogo from '../assets/boa-logo.png';
 import { routeQuestion } from '../utils/chatRouter';
 
 export default function Chat() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +20,7 @@ export default function Chat() {
   const [showStats, setShowStats] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     loadSessionHistory();
@@ -38,10 +36,10 @@ export default function Chat() {
 
   const loadSessionHistory = async () => {
     try {
-      const history = await getSessionHistory(sessionId);
+      const historyData = await getSessionHistory(sessionId);
       const loadedMessages: Message[] = [];
 
-      history.forEach((conv) => {
+      historyData.forEach((conv) => {
         loadedMessages.push({
           id: `${conv.id}-q`,
           question: conv.question,
@@ -81,9 +79,7 @@ export default function Chat() {
   };
 
   const simulateGenerativeAI = async (prompt: string): Promise<string> => {
-    // Simulate real AI processing latency
     await new Promise(r => setTimeout(r, 600 + Math.random() * 800));
-
     const p = prompt.toLowerCase();
 
     if (p.includes("merci") || p.includes("choukr") || p.includes("thanks")) {
@@ -134,10 +130,9 @@ export default function Chat() {
           userEmail,
         });
 
-        // Simulate backend call delay for realism
         await new Promise(r => setTimeout(r, 800));
 
-        const emailStatus = await notifyUserByEmail({
+        await notifyUserByEmail({
           email: userEmail,
           subject: 'Confirmation traitement N1-RR',
           message: `Votre demande a été traitée: ${rpa.resultText}`,
@@ -156,9 +151,7 @@ export default function Chat() {
         };
         setMessages((prev) => [...prev, botMessage]);
       } else if (route.handledLocally) {
-
-        await new Promise(r => setTimeout(r, 600)); // typing delay
-
+        await new Promise(r => setTimeout(r, 600));
         const botMessage: Message = {
           id: `bot-${Date.now()}`,
           question: '',
@@ -169,9 +162,6 @@ export default function Chat() {
         };
         setMessages((prev) => [...prev, botMessage]);
       } else {
-        // AI Conversational Fallback instead of raw backend failure
-
-        // Let's try backend FIRST, if it fails or returns generic, we inject our AI response!
         let finalAnswer = "";
         try {
           const response = await askQuestion(inputValue, sessionId);
@@ -180,7 +170,6 @@ export default function Chat() {
           }
           finalAnswer = response.answer;
         } catch (err) {
-          // Fallback to our simulated intelligent generative AI logic
           finalAnswer = await simulateGenerativeAI(inputValue);
         }
 
@@ -195,7 +184,6 @@ export default function Chat() {
         setMessages((prev) => [...prev, botMessage]);
       }
     } catch (error) {
-      // Should rarely happen now due to our AI fallback
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         question: '',
@@ -204,7 +192,6 @@ export default function Chat() {
         timestamp: new Date(),
         isUser: false,
       };
-
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -281,16 +268,14 @@ export default function Chat() {
               <PlusCircle size={16} className="text-[#0B3D91]" />
               <span>Nouveau Chat</span>
             </button>
-            <a
-              href="/sim-bank?accountRef=DEMO_ACC_001"
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={() => navigate('/bank/login')}
               className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-white border border-[#0B3D91] bg-gradient-to-r from-[#0B3D91] to-[#124baf] rounded-lg hover:shadow-lg transition-all shadow-sm group"
-              title="Ouvrir l'interface bancaire simulation"
+              title="Ouvrir l'interface bancaire"
             >
               <Building2 size={16} className="group-hover:scale-110 transition-transform" />
-              <span>Système bancaire (RPA)</span>
-            </a>
+              <span>Espace Client</span>
+            </button>
           </div>
         </div>
       </div>
@@ -303,30 +288,6 @@ export default function Chat() {
             <QuickActions onSelectQuestion={handleQuickQuestion} />
           )}
 
-<<<<<<< HEAD
-        {messages.map((msg, index) => (
-          <div key={msg.id} className="animate-fadeIn">
-            <MessageBubble
-              message={msg.isUser ? msg.question : msg.answer}
-              isUser={!!msg.isUser}
-              timestamp={msg.timestamp}
-            />
-            {!msg.isUser && index === messages.length - 1 && suggestions.length > 0 && (
-              <div className="mt-3 ml-12 flex flex-wrap gap-2">
-                {suggestions.map((suggestion, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSuggestion(suggestion)}
-                    className="px-3 py-1 text-xs bg-white border border-gray-300 text-gray-700 rounded-full hover:border-[#0B3D91] hover:text-[#0B3D91] transition-all hover:shadow-md"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-=======
           {messages.map((msg, index) => (
             <div key={msg.id} className="animate-fadeIn">
               <MessageBubble
@@ -350,10 +311,8 @@ export default function Chat() {
               )}
             </div>
           ))}
->>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
 
           {isLoading && <TypingIndicator />}
-
           <div ref={messagesEndRef} className="h-6" />
         </div>
       </div>
@@ -361,11 +320,11 @@ export default function Chat() {
       <div className="bg-white border-t border-slate-200 px-6 py-5 shadow-lg z-10">
         <div className="flex gap-3 max-w-4xl mx-auto items-end">
           <textarea
-            ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+            ref={inputRef}
             rows={1}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress as any}
+            onKeyPress={handleKeyPress}
             placeholder="Posez votre question (Je comprends le langage naturel)..."
             className="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl resize-none max-h-32 min-h-[52px] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B3D91]/20 focus:border-[#0B3D91] transition-all shadow-sm"
             disabled={isLoading}

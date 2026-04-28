@@ -150,7 +150,7 @@ const BankLogin = () => {
                 onClick={() => navigate('/bank/register')}
                 className="w-full flex justify-center py-2 px-4 border border-blue-900 rounded-md shadow-sm text-sm font-medium text-blue-900 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                Créer un compte (Mockup)
+                Créer un compte
               </button>
             </div>
           </div>
