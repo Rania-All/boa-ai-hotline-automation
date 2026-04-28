@@ -17,23 +17,14 @@ import java.util.*;
 public class FaqStore {
 
     private final String excelPath;
-<<<<<<< HEAD
     private final FaqRepository repository;
-    private final com.example.boafaqchatbot.ai.OllamaClient ollama;
+    private final OllamaClient ollama;
     private volatile List<FaqItem> items = List.of();
 
-    public FaqStore(@Value("${app.faq.excel-path}") String excelPath, FaqRepository repository, com.example.boafaqchatbot.ai.OllamaClient ollama) {
+    public FaqStore(@Value("${app.faq.excel-path}") String excelPath, FaqRepository repository, OllamaClient ollama) {
         this.excelPath = excelPath;
         this.repository = repository;
         this.ollama = ollama;
-=======
-    private final OllamaClient ollamaClient;
-    private volatile List<FaqItem> items = List.of();
-
-    public FaqStore(@Value("${app.faq.excel-path}") String excelPath, OllamaClient ollamaClient) {
-        this.excelPath = excelPath;
-        this.ollamaClient = ollamaClient;
->>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
         reload();
     }
 
@@ -43,16 +34,11 @@ public class FaqStore {
 
     public synchronized void reload() {
         try {
-<<<<<<< HEAD
             System.out.println("🧹 Nettoyage de la base FAQ pour synchronisation fraîche...");
-            repository.deleteAll(); // On vide pour être sûr que tout est recalculé proprement
+            // Optionally clear repository or just sync
             syncExcelToDb();
             this.items = Collections.unmodifiableList(repository.findAll());
             System.out.println("✅ FAQ chargée : " + items.size() + " questions (avec embeddings frais)");
-=======
-            this.items = Collections.unmodifiableList(load());
-            System.out.println("✅ FAQ chargée : " + items.size() + " questions avec embeddings sémantiques complets.");
->>>>>>> 6187067aa60f3fc3c6d1786692066b5b6dfca226
         } catch (Exception e) {
             System.err.println("⚠️ Impossible de charger la FAQ : " + e.getMessage());
             this.items = List.of();
@@ -127,11 +113,7 @@ public class FaqStore {
                 String a = r.getCell(1).getStringCellValue().trim();
 
                 if (!q.isEmpty() && !a.isEmpty()) {
-                    double[] emb = ollamaClient.embed(q); // Semantic Embedding via Ollama
-                    if (emb == null) {
-                        emb = new double[0]; // fallback
-                    }
-                    list.add(new FaqItem(q, a, TextNorm.norm(q), emb));
+                    list.add(new FaqItem(q, a, TextNorm.norm(q)));
                 }
             }
 
