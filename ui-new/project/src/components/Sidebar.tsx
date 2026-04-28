@@ -1,6 +1,5 @@
-import { MessageSquare, History, Zap, Building } from 'lucide-react';
+import { MessageSquare, History, Building, Zap, BarChart3, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import boaLogo from '../assets/boa-logo.png';
 
 interface SidebarProps {
   currentPage: 'chat' | 'history';
@@ -11,59 +10,70 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="w-64 bg-gradient-to-b from-[#0B3D91] via-[#08306B] to-[#041B3A] text-white h-screen flex flex-col shadow-2xl">
-      <div className="p-6 border-b border-white/10 bg-gradient-to-r from-[#0B3D91] to-transparent">
-        <div className="flex items-center gap-3 mb-4">
-          <img
-            src={boaLogo}
-            alt="Bank of Africa"
-            className="w-12 h-12 rounded-xl bg-white p-1 shadow-lg"
-          />
-          <div>
-            <h1 className="font-bold text-lg leading-tight">Bank of Africa</h1>
-            <p className="text-white/80 text-xs">Assistance en ligne</p>
-          </div>
+    <aside className="sidebar">
+      {/* Logo zone */}
+      <div className="sidebar-logo">
+        <div className="logo-mark" style={{ width: '44px', height: '44px', padding: '4px', background: '#fff', borderRadius: '10px' }}>
+          <img src="/src/assets/boa-logo.png" alt="BOA Logo" className="w-full h-full object-contain" />
+        </div>
+        <div className="logo-text">
+          <div className="logo-name">Bank Of Africa</div>
+
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
-        <div className="flex items-center gap-2 px-4 py-2 text-white/80 text-xs font-semibold uppercase tracking-wider">
-          <Zap size={14} />
-          <span>Navigation</span>
-        </div>
+      {/* Nav */}
+      <nav className="sidebar-nav">
+        <div className="nav-section-label">Navigation</div>
 
         <button
           onClick={() => onNavigate('chat')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            currentPage === 'chat'
-              ? 'bg-white text-[#0B3D91] shadow-lg scale-105'
-              : 'text-white/90 hover:bg-white/10'
-          }`}
+          className={`nav-item ${currentPage === 'chat' ? 'nav-active' : ''}`}
         >
-          <MessageSquare size={20} />
-          <span className="font-medium">Session en cours</span>
+          <MessageSquare size={18} />
+          <span>Session en cours</span>
+          {currentPage === 'chat' && <span className="nav-indicator" />}
         </button>
 
         <button
           onClick={() => onNavigate('history')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            currentPage === 'history'
-              ? 'bg-white text-[#0B3D91] shadow-lg scale-105'
-              : 'text-white/90 hover:bg-white/10'
-          }`}
+          className={`nav-item ${currentPage === 'history' ? 'nav-active' : ''}`}
         >
-          <History size={20} />
-          <span className="font-medium">Historique des échanges</span>
+          <History size={18} />
+          <span>Historique</span>
+          {currentPage === 'history' && <span className="nav-indicator" />}
         </button>
 
-        <button
-          onClick={() => navigate('/bank/login')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-white/90 hover:bg-white/10 mt-4 border border-white/20`}
-        >
-          <Building size={20} className="text-[#35B8C6]" />
-          <span className="font-medium">Portail Bancaire</span>
+        <div className="nav-divider" />
+        <div className="nav-section-label">Outils</div>
+
+        <button onClick={() => navigate('/bank/login')} className="nav-item nav-portal">
+          <Building size={18} />
+          <span>Portail Bancaire</span>
         </button>
       </nav>
-    </div>
+
+      {/* Metrics card */}
+      <div className="sidebar-metrics">
+        <div className="metric-row">
+          <div className="metric-item">
+            <BarChart3 size={14} color="var(--accent)" />
+            <span className="metric-label">Précision</span>
+            <span className="metric-val">87%</span>
+          </div>
+          <div className="metric-item">
+            <Zap size={14} color="#10b981" />
+            <span className="metric-label">RPA actif</span>
+            <span className="metric-val" style={{ color: '#10b981' }}>ON</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="sidebar-footer">
+        <Shield size={12} />
+        <span>Données chiffrées · Conforme RGPD</span>
+      </div>
+    </aside>
   );
 }

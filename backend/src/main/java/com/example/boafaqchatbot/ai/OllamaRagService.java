@@ -47,8 +47,8 @@ public class OllamaRagService {
         StringBuilder sb = new StringBuilder();
         sb.append("Tu es un assistant hotline Bank of Africa. ");
         sb.append("Réponds en français, de façon concise et utile. ");
-        sb.append("Utilise uniquement les informations de la FAQ ci-dessous. ");
-        sb.append("Si la FAQ ne contient pas la réponse, dis clairement que tu ne sais pas.\n\n");
+        sb.append("Utilise uniquement les informations de la FAQ ci-dessous pour répondre. ");
+        sb.append("Si la FAQ ne contient pas exactement la réponse, essaie d'être le plus proche possible des informations fournies (en gérant les synonymes comme délai/durée) ou suggère de contacter le service client.\n\n");
         sb.append("FAQ (extraits):\n");
         for (int i = 0; i < context.size(); i++) {
             ScoredFaq item = context.get(i);

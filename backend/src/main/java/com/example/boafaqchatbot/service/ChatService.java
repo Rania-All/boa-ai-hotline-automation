@@ -43,7 +43,7 @@ public class ChatService {
 
         // 1) FAQ Sémantique (Ollama Embeddings first)
         ChatResponse faqResponse = similarityEngine(message);
-        if (faqResponse.confidence() >= 0.65) {
+        if (faqResponse.confidence() >= 0.60) {
             history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId);
             return faqResponse;
         }
@@ -60,6 +60,7 @@ public class ChatService {
             case BLOQUER_CARTE -> quick("Appelez immédiatement le centre client BOA pour bloquer votre carte.");
             case CARTE_BANCAIRE -> quick("Les cartes bancaires BOA sont disponibles sous 5 jours ouvrables.");
             case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
+            case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d’un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
             case RPA_N1_RR -> triggerRpa(message);
             default -> ollamaFallback(message);
         };
@@ -144,7 +145,7 @@ public class ChatService {
         
         ScoredMatch best = matches.isEmpty() ? null : matches.get(0);
 
-        if (best == null || best.score() < 0.65) { 
+        if (best == null || best.score() < 0.60) { 
             return new ChatResponse(
                     "Je n'ai pas compris votre demande. Pouvez-vous reformuler ?",
                     best != null ? best.score() : 0, null, List.of()

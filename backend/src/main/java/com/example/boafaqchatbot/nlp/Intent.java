@@ -7,6 +7,7 @@ public enum Intent {
     CARTE_BANCAIRE,
     BLOQUER_CARTE,
     FRAIS,
+    TEG,
     RPA_N1_RR,
     UNKNOWN
 }

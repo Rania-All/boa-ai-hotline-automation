@@ -39,6 +39,9 @@ public class IntentDetector {
         if (text.contains("frais") || text.contains("tarif"))
             return Intent.FRAIS;
 
+        if (text.contains("teg") || (text.contains("taux") && text.contains("annuel") && text.contains("effectif")))
+            return Intent.TEG;
+
         return Intent.UNKNOWN;
     }
 }

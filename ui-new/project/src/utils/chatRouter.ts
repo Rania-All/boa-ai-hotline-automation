@@ -5,6 +5,7 @@ export type IntentCode =
   | 'GET_BALANCE'
   | 'DOTATION_ACTIVATE'
   | 'EXTERNAL_TRANSFER'
+  | 'TEG_INFO'
   | 'GREETING'
   | 'UNKNOWN';
 
@@ -107,6 +108,19 @@ const RULES: Rule[] = [
     ],
     answer: "C'est noté. Je prépare l'opération de virement / mise à disposition grâce à notre traitement automatique RPA.",
     confidence: 0.95,
+  },
+  {
+    intent: 'TEG_INFO',
+    type: 'N1-IN',
+    patterns: [
+      'teg',
+      'c est quoi le teg',
+      'definition teg',
+      /le\s+teg/i,
+      /taux\s+annuel\s+effectif\s+global/i
+    ],
+    answer: "Le taux annuel effectif global (TEG) est le coût total d’un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.",
+    confidence: 1.0,
   },
 ];
 
