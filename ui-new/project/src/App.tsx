@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar (2)';
-import Chat from './pages/Chat (1)';
+import Sidebar from './components/Sidebar';
+import Chat from './pages/Chat';
 import History from './pages/History';
 
 // Bank Imports
