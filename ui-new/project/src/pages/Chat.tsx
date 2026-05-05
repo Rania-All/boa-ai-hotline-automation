@@ -65,29 +65,32 @@ export default function Chat() {
     setClassificationTag(null);
 
     try {
+      // On envoie tout au serveur Java (askQuestion)
+      // On garde routeQuestion juste pour l'affichage visuel du tag au début si besoin
       const route = routeQuestion(text);
       setClassificationTag(route.type);
 
-      if (route.type === 'N1-RR') {
-        const rpa = await triggerRpaWorkflow({ question: text, sessionId, intentCode: route.intent, accountRef: 'DEMO_ACC_001', userEmail: 'client@boa.local' });
-        await notifyUserByEmail({ email: 'client@boa.local', subject: 'Confirmation RPA', message: rpa.resultText });
-        setMessages(prev => [...prev, { id: `b-${Date.now()}`, question: '', answer: `${route.answer}\n\n✅ Robot RPA exécuté avec succès !\n📋 Résultat : ${rpa.resultText}\n📧 Confirmation envoyée par email.`, confidence: 0.95, timestamp: new Date(), isUser: false }]);
-      } else if (route.handledLocally) {
-        await new Promise(r => setTimeout(r, 700));
-        setMessages(prev => [...prev, { id: `b-${Date.now()}`, question: '', answer: route.answer, confidence: route.confidence, timestamp: new Date(), isUser: false }]);
-      } else {
-        let finalAnswer = '';
-        try {
-          const resp = await askQuestion(text, sessionId);
-          if (!resp.answer || resp.confidence < 0.35 || resp.answer.includes("Je n'ai pas compris")) throw new Error('fallback');
-          finalAnswer = resp.answer;
-        } catch {
-          finalAnswer = await simulateGenerativeAI(text);
-        }
-        setMessages(prev => [...prev, { id: `b-${Date.now()}`, question: '', answer: finalAnswer, confidence: 0.92, timestamp: new Date(), isUser: false }]);
+      const resp = await askQuestion(text, sessionId);
+      
+      // Si le backend a déclenché un RPA, il renvoie l'info dans la réponse
+      // Pour l'instant, on affiche simplement la réponse du serveur Java
+      setMessages(prev => [...prev, { 
+        id: `b-${Date.now()}`, 
+        question: '', 
+        answer: resp.answer, 
+        confidence: resp.confidence || 0.9, 
+        timestamp: new Date(), 
+        isUser: false 
+      }]);
+
+      // On met à jour le tag avec celui du serveur s'il existe
+      if (resp.source) {
+          setClassificationTag(resp.source === 'RPA' ? 'N1-RR' : 'N1-IN');
       }
-    } catch {
-      setMessages(prev => [...prev, { id: `e-${Date.now()}`, question: '', answer: "Une erreur réseau s'est produite. Veuillez réessayer.", confidence: 0, timestamp: new Date(), isUser: false }]);
+
+    } catch (error) {
+      console.error("Erreur Chat:", error);
+      setMessages(prev => [...prev, { id: `e-${Date.now()}`, question: '', answer: "Une erreur réseau s'est produite. Vérifiez que votre serveur Java est lancé sur le port 8081.", confidence: 0, timestamp: new Date(), isUser: false }]);
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();

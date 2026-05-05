@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -16,11 +17,26 @@ public class UiPathOrchestratorClient {
 
     private final UiPathProperties props;
     private final WebClient web;
+    private final WebClient identity;
 
     public UiPathOrchestratorClient(UiPathProperties props, WebClient.Builder builder) {
         this.props = props;
-        this.web = builder
+        
+        // Configuration spéciale pour forcer l'utilisation du DNS système de Windows
+        // Cela règle définitivement l'erreur "DnsNameResolverTimeoutException" sur les partages de connexion 4G.
+        reactor.netty.http.client.HttpClient httpClient = reactor.netty.http.client.HttpClient.create()
+                .resolver(io.netty.resolver.DefaultAddressResolverGroup.INSTANCE);
+        org.springframework.http.client.reactive.ReactorClientHttpConnector connector = 
+                new org.springframework.http.client.reactive.ReactorClientHttpConnector(httpClient);
+
+        this.web = builder.clone()
+                .clientConnector(connector)
                 .baseUrl(props.getBaseUrl() == null ? "" : props.getBaseUrl())
+                .build();
+                
+        this.identity = builder.clone()
+                .clientConnector(connector)
+                .baseUrl("https://cloud.uipath.com")
                 .build();
     }
 
@@ -39,19 +55,20 @@ public class UiPathOrchestratorClient {
 
         String token = fetchAccessToken();
 
-        Map<String, Object> body = Map.of(
-                "startInfo", Map.of(
-                        "ReleaseKey", props.getReleaseKey(),
-                        "Strategy", "Specific",
-                        "RobotIds", List.of(),
-                        "NoOfRobots", 0,
-                        "InputArguments", JsonMini.stringify(inputArguments),
-                        "JobsCount", 1
-                )
-        );
+        Map<String, Object> startInfo = new HashMap<>();
+        // Utilisation de ReleaseName au lieu de ReleaseKey (qui est caché dans le nouvel Orchestrator)
+        startInfo.put("ReleaseName", props.getReleaseKey());
+        startInfo.put("Strategy", "JobsCount");
+        startInfo.put("JobsCount", 1);
+        startInfo.put("InputArguments", JsonMini.stringify(inputArguments));
 
-        // Folder header for modern OrchestratorC:\Users\HP\Downloads\project-bolt-sb1-kdpxmzcq\project
+        Map<String, Object> body = Map.of("startInfo", startInfo);
+
+        // Folder header for modern Orchestrator
         String folderId = props.getFolderId();
+
+        System.out.println("Envoi requête UiPath à : " + props.getBaseUrl());
+        System.out.println("Body : " + body);
 
         Map<?, ?> res = web.post()
                 .uri("/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs")
@@ -62,7 +79,13 @@ public class UiPathOrchestratorClient {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Map.class)
+                .doOnError(org.springframework.web.reactive.function.client.WebClientResponseException.class, e -> {
+                    System.err.println(">>> DÉTAIL ERREUR UIPATH : " + e.getResponseBodyAsString());
+                })
+                .doOnError(e -> System.err.println("Erreur API UiPath globale : " + e.getMessage()))
                 .block(Duration.ofSeconds(20));
+
+        System.out.println("Réponse UiPath : " + res);
 
         // Best-effort parsing (schema differs by version)
         String jobKey = null;
@@ -95,9 +118,7 @@ public class UiPathOrchestratorClient {
 
     private String fetchAccessToken() {
         // Cloud identity service
-        WebClient identity = WebClient.builder()
-                .baseUrl("https://cloud.uipath.com")
-                .build();
+        WebClient identity = this.identity;
 
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "client_credentials");

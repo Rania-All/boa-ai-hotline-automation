@@ -84,17 +84,17 @@ const BankRegister = () => {
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nom</label>
-                <input type="text" name="nom" required value={formData.nom} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <input type="text" name="nom" required value={formData.nom} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Prénom</label>
-                <input type="text" name="prenom" required value={formData.prenom} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <input type="text" name="prenom" required value={formData.prenom} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Genre</label>
-                <select name="genre" value={formData.genre} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <select name="genre" value={formData.genre} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900">
                   <option value="M">Masculin</option>
                   <option value="F">Féminin</option>
                 </select>
@@ -102,33 +102,33 @@ const BankRegister = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Date de Naissance</label>
-                <input type="date" name="dateNaissance" required value={formData.dateNaissance} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <input type="date" name="dateNaissance" required value={formData.dateNaissance} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">CIN / Passeport</label>
-                <input type="text" name="cin" required value={formData.cin} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <input type="text" name="cin" required value={formData.cin} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nationalité</label>
-                <input type="text" name="nationalite" required value={formData.nationalite} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <input type="text" name="nationalite" required value={formData.nationalite} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Numéro de Téléphone</label>
-                <input type="tel" name="telephone" required value={formData.telephone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <input type="tel" name="telephone" required value={formData.telephone} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email" required value={formData.email} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <input type="email" name="email" required value={formData.email} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
               </div>
             </div>
 
             <div className="pt-4 border-t border-gray-200">
               <label className="block text-sm font-medium text-gray-700">Mot de passe pour l'accès web</label>
-              <input type="password" name="motDePasse" required value={formData.motDePasse} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              <input type="password" name="motDePasse" required value={formData.motDePasse} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900" />
             </div>
 
             <div className="pt-5">

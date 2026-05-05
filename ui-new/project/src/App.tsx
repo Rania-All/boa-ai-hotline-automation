@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import Chat from './pages/Chat';
+
 import History from './pages/History';
+import Chat from './pages/Chat';
 
 // Bank Imports
 import BankLayout from './components/bank/BankLayout';

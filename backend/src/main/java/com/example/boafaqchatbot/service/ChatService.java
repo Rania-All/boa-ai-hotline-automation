@@ -36,32 +36,36 @@ public class ChatService {
     }
 
     public ChatResponse reply(String message, String sessionId) {
+        System.out.println("\n>>> DEBUG: Message reçu du site : [" + message + "]");
         message = message == null ? "" : message.trim();
         if (message.isEmpty()) {
             return new ChatResponse("Veuillez saisir une question.", 0, null, List.of());
         }
 
-        // 1) FAQ Sémantique (Ollama Embeddings first)
+        // 1) Intent NLP (Priorité au déclenchement du Robot)
+        Intent intent = nlp.detectIntent(message);
+        
+        if (intent == Intent.VIREMENT) {
+             return triggerRpa(message, "VIREMENT");
+        }
+
+        // 2) FAQ Sémantique (Si ce n'est pas un ordre de virement)
         ChatResponse faqResponse = similarityEngine(message);
         if (faqResponse.confidence() >= 0.60) {
             history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId);
             return faqResponse;
         }
 
-        // 2) Intent NLP
-        Intent intent = nlp.detectIntent(message);
-
         ChatResponse response = switch (intent) {
             case CONSULTER_SOLDE ->
                 quick("Vous pouvez consulter votre solde via BOA Mobile, le portail web ou en agence.");
             case OUVERTURE_COMPTE ->
                 quick("Pour ouvrir un compte, munissez-vous de votre CIN et justificatif de domicile.");
-            case VIREMENT -> quick("Les virements peuvent être effectués via l'application BOA Mobile ou en agence.");
-            case BLOQUER_CARTE -> quick("Appelez immédiatement le centre client BOA pour bloquer votre carte.");
+            case VIREMENT -> triggerRpa(message, "VIREMENT");
             case CARTE_BANCAIRE -> quick("Les cartes bancaires BOA sont disponibles sous 5 jours ouvrables.");
             case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
             case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d’un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
-            case RPA_N1_RR -> triggerRpa(message);
+            case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA");
             default -> ollamaFallback(message);
         };
 
@@ -79,28 +83,52 @@ public class ChatService {
         return new ChatResponse(llm, 0.55, "OLLAMA_RAG", List.of());
     }
 
-    private ChatResponse triggerRpa(String message) {
-        UiPathOrchestratorClient.StartJobResult started = rpa.startJob(Map.of(
-                "source", "chatbot",
-                "rawQuestion", message));
+    private ChatResponse triggerRpa(String message, String action) {
+        // Extraction intelligente des paramètres via Ollama
+        String prompt = "Extrait le montant (chiffre), le nom du bénéficiaire et le numéro de compte de cette phrase: \"" + message + 
+                       "\". Répond uniquement au format JSON: {\"montant\": \"...\", \"beneficiaire\": \"...\", \"compte\": \"...\"}";
+        String extractionJson = ollama.generate(prompt);
+        
+        // Nettoyage du JSON
+        String montant = "0";
+        String beneficiaire = "Inconnu";
+        String compte = "0000000000";
+        try {
+            if (extractionJson.contains("\"montant\"")) {
+                montant = extractionJson.split("\"montant\":")[1].split(",")[0].replaceAll("[^0-9]", "");
+            }
+            if (extractionJson.contains("\"beneficiaire\"")) {
+                beneficiaire = extractionJson.split("\"beneficiaire\":")[1].split(",")[0].replaceAll("[\"']", "").trim();
+            }
+            if (extractionJson.contains("\"compte\"")) {
+                compte = extractionJson.split("\"compte\":")[1].split("}")[0].replaceAll("[^0-9]", "").trim();
+            }
+        } catch (Exception e) {
+            // Fallback
+        }
+
+        // Préparation des arguments pour UiPath
+        Map<String, Object> uipathArgs = Map.of(
+                "in_Amount", montant,
+                "in_BeneficiaryName", beneficiaire,
+                "in_SourceAccount", compte,
+                "in_UserEmail", "raniaalgui4@gmail.com",
+                "in_Reason", "Virement via Chatbot"
+        );
+
+        UiPathOrchestratorClient.StartJobResult started = rpa.startJob(uipathArgs);
 
         if ("DISABLED".equalsIgnoreCase(started.state())) {
             return new ChatResponse(
-                    "Votre demande nécessite un traitement automatisé (RPA), mais le robot n'est pas encore configuré. "
-                            +
-                            "Activez UiPath dans `application.properties` (uipath.enabled=true) et renseignez les credentials.",
-                    0.6,
-                    "RPA",
-                    List.of("Activer UiPath Orchestrator", "Configurer releaseKey + folderId"));
+                    "Votre demande de " + action.toLowerCase() + " nécessite un traitement automatisé (RPA), mais le robot n'est pas encore configuré. "
+                            + "Activez UiPath dans `application.properties`.",
+                    0.6, "RPA", List.of("Activer UiPath Orchestrator"));
         }
 
         return new ChatResponse(
-                "J'ai déclenché un robot RPA pour traiter votre demande. " +
-                        (started.jobKey() != null ? "Référence job: " + started.jobKey() : ""),
-                0.85,
-                "RPA",
-                started.jobKey() == null ? List.of()
-                        : List.of("Suivre le statut: /api/rpa/status/" + started.jobKey()));
+                "J'ai lancé le robot RPA pour effectuer votre " + action.toLowerCase() + " de " + montant + " DH vers " + beneficiaire + ". " +
+                (started.jobKey() != null ? "ID Job: " + started.jobKey() : ""),
+                0.9, "RPA", List.of("Suivre le statut sur l'Orchestrator"));
     }
 
     /** Advanced Hybrid Similarity (Semantic + Keyword Overlap) */

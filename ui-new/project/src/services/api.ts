@@ -34,19 +34,14 @@ export async function triggerRpaWorkflow(params: {
   accountRef: string;
   userEmail: string;
 }): Promise<{ status: string; resultText: string; emailStatus: string }> {
-  // Si un endpoint orchestrateur existe, on l'appelle.
+  // On ne simule plus ! On laisse le backend Java gérer le robot.
+  // Si cette fonction est appelée, c'est que le frontend veut forcer un appel.
+  // Pour l'instant, on renvoie une erreur si pas d'URL, pour voir qui appelle.
   if (RPA_ORCHESTRATOR_URL) {
     const response = await fetch(RPA_ORCHESTRATOR_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requestId: crypto.randomUUID(),
-        question: params.question,
-        sessionId: params.sessionId,
-        intentCode: params.intentCode,
-        accountRef: params.accountRef,
-        userEmail: params.userEmail,
-      }),
+      body: JSON.stringify(params),
     });
 
     if (!response.ok) throw new Error('RPA Orchestrator call failed');
@@ -58,13 +53,7 @@ export async function triggerRpaWorkflow(params: {
     };
   }
 
-  // Fallback démo local si l'orchestrateur n'est pas encore branché.
-  await new Promise((resolve) => setTimeout(resolve, 1200));
-  return {
-    status: 'SUCCESS',
-    resultText: 'Opération traitée via robot (mode simulation).',
-    emailStatus: 'EMAIL_SENT_SIMULATED',
-  };
+  throw new Error("RPA_ORCHESTRATOR_URL non configuré. Le backend Java devrait s'en charger via /api/ask.");
 }
 
 export async function notifyUserByEmail(payload: {
