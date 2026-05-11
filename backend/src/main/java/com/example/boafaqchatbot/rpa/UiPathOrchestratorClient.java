@@ -70,20 +70,25 @@ public class UiPathOrchestratorClient {
         System.out.println("Envoi requête UiPath à : " + props.getBaseUrl());
         System.out.println("Body : " + body);
 
-        Map<?, ?> res = web.post()
-                .uri("/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .header("X-UIPATH-OrganizationUnitId", folderId == null ? "" : folderId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .doOnError(org.springframework.web.reactive.function.client.WebClientResponseException.class, e -> {
-                    System.err.println(">>> DÉTAIL ERREUR UIPATH : " + e.getResponseBodyAsString());
-                })
-                .doOnError(e -> System.err.println("Erreur API UiPath globale : " + e.getMessage()))
-                .block(Duration.ofSeconds(20));
+        Map<?, ?> res;
+        try {
+            res = web.post()
+                    .uri("/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .header("X-UIPATH-OrganizationUnitId", folderId == null ? "" : folderId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .doOnError(org.springframework.web.reactive.function.client.WebClientResponseException.class, e -> {
+                        System.err.println(">>> DÉTAIL ERREUR UIPATH : " + e.getResponseBodyAsString());
+                    })
+                    .block(Duration.ofSeconds(20));
+        } catch (Exception e) {
+            System.err.println("Erreur API UiPath globale : " + e.getMessage());
+            return new StartJobResult(null, "FAILED", "Problème technique de connexion à l'Orchestrator : " + e.getMessage());
+        }
 
         System.out.println("Réponse UiPath : " + res);
 
@@ -95,6 +100,10 @@ public class UiPathOrchestratorClient {
             if (key != null) jobKey = key.toString();
             Object s = first.get("State");
             if (s != null) state = s.toString();
+        }
+
+        if (jobKey == null) {
+            return new StartJobResult(null, "FAILED", "L'Orchestrator n'a pas retourné d'ID de Job. Vérifiez la configuration du processus.");
         }
 
         return new StartJobResult(jobKey, state, "Job démarré");

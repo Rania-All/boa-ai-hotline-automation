@@ -4,14 +4,19 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 const RPA_ORCHESTRATOR_URL = import.meta.env.VITE_RPA_ORCHESTRATOR_API || '';
 const EMAIL_API_URL = import.meta.env.VITE_EMAIL_NOTIFICATION_API || '';
 
-export async function askQuestion(question: string, sessionId: string): Promise<AskResponse> {
+export async function askQuestion(
+  question: string, 
+  sessionId: string, 
+  solde?: number, 
+  numeroCompte?: string
+): Promise<AskResponse> {
   try {
     const response = await fetch(`${BACKEND_URL}/api/ask`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ question, sessionId }),
+      body: JSON.stringify({ question, sessionId, solde, numeroCompte }),
     });
 
     if (!response.ok) {
@@ -93,6 +98,17 @@ export async function getSessionHistory(sessionId: string): Promise<Conversation
     return await response.json();
   } catch (error) {
     console.error('Error fetching session history:', error);
+    throw error;
+  }
+}
+
+export async function getJobStatus(jobKey: string): Promise<any> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/job-status/${jobKey}`, { method: 'GET' });
+    if (!response.ok) throw new Error('Failed to fetch job status');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching job status:', error);
     throw error;
   }
 }

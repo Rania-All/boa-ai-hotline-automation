@@ -30,6 +30,9 @@ public class ChatHistory {
     @Column(name = "session_id", length = 128)
     private String sessionId;
 
+    @Column(length = 64)
+    private String source;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -37,19 +40,25 @@ public class ChatHistory {
         // for JPA
     }
 
-    public ChatHistory(String q, String a, double c, String sessionId) {
+    public ChatHistory(String q, String a, double c, String sessionId, String source) {
         this.id = UUID.randomUUID().toString();
         this.question = q;
         this.answer = a;
         this.confidence = c;
         this.sessionId = sessionId;
+        this.source = source;
         this.createdAt = OffsetDateTime.now();
+    }
+
+    public ChatHistory(String q, String a, double c, String sessionId) {
+        this(q, a, c, sessionId, null);
     }
 
     public String getId() { return id; }
     public String getQuestion() { return question; }
     public String getAnswer() { return answer; }
     public double getConfidence() { return confidence; }
+    public String getSource() { return source; }
 
     @Transient
     public String getTimestamp() {

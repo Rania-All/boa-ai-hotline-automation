@@ -2,12 +2,20 @@ import { MessageSquare, History, Building, Zap, BarChart3, Shield } from 'lucide
 import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
-  currentPage: 'chat' | 'history';
-  onNavigate: (page: 'chat' | 'history') => void;
+  currentPage: 'chat' | 'history' | 'admin';
+  onNavigate: (page: 'chat' | 'history' | 'admin') => void;
 }
 
 export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const navigate = useNavigate();
+  const userStr = localStorage.getItem('boa_bank_current_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const role = user?.role || 'guest';
+
+  const handleLogout = () => {
+    localStorage.removeItem('boa_bank_current_user');
+    window.location.href = '/login';
+  };
 
   return (
     <aside className="sidebar">
@@ -26,23 +34,38 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       <nav className="sidebar-nav">
         <div className="nav-section-label">Navigation</div>
 
-        <button
-          onClick={() => onNavigate('chat')}
-          className={`nav-item ${currentPage === 'chat' ? 'nav-active' : ''}`}
-        >
-          <MessageSquare size={18} />
-          <span>Session en cours</span>
-          {currentPage === 'chat' && <span className="nav-indicator" />}
-        </button>
+        {(role === 'user' || role === 'guest') && (
+          <button
+            onClick={() => onNavigate('chat')}
+            className={`nav-item ${currentPage === 'chat' ? 'nav-active' : ''}`}
+          >
+            <MessageSquare size={18} />
+            <span>Session en cours</span>
+            {currentPage === 'chat' && <span className="nav-indicator" />}
+          </button>
+        )}
 
-        <button
-          onClick={() => onNavigate('history')}
-          className={`nav-item ${currentPage === 'history' ? 'nav-active' : ''}`}
-        >
-          <History size={18} />
-          <span>Historique</span>
-          {currentPage === 'history' && <span className="nav-indicator" />}
-        </button>
+        {(role === 'user' || role === 'guest') && (
+          <button
+            onClick={() => onNavigate('history')}
+            className={`nav-item ${currentPage === 'history' ? 'nav-active' : ''}`}
+          >
+            <History size={18} />
+            <span>Historique</span>
+            {currentPage === 'history' && <span className="nav-indicator" />}
+          </button>
+        )}
+
+        {role === 'admin' && (
+          <button
+            onClick={() => onNavigate('admin')}
+            className={`nav-item ${currentPage === 'admin' ? 'nav-active' : ''}`}
+          >
+            <Shield size={18} />
+            <span>Dashboard Admin</span>
+            {currentPage === 'admin' && <span className="nav-indicator" />}
+          </button>
+        )}
 
         <div className="nav-divider" />
         <div className="nav-section-label">Outils</div>
@@ -70,9 +93,19 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       </div>
 
       {/* Footer */}
-      <div className="sidebar-footer">
-        <Shield size={12} />
-        <span>Données chiffrées · Conforme RGPD</span>
+      <div className="sidebar-footer" style={{ borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+        <button 
+          onClick={handleLogout}
+          className="nav-item" 
+          style={{ width: '100%', justifyContent: 'flex-start', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer' }}
+        >
+          <Zap size={16} />
+          <span>Déconnexion</span>
+        </button>
+        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-muted)', fontSize: '10px' }}>
+          <Shield size={12} />
+          <span>Données chiffrées · BOA</span>
+        </div>
       </div>
     </aside>
   );

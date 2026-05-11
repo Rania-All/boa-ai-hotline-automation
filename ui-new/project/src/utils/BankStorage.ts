@@ -11,6 +11,7 @@ export interface BankUser {
   numeroCompte: string;
   motDePasse: string;
   solde: number;
+  role: 'user' | 'admin';
   cartes: {
     numero: string;
     bloquee: boolean;
@@ -31,7 +32,39 @@ const STORAGE_KEY = 'boa_mock_bank_users';
 export const BankStorage = {
   getUsers: (): BankUser[] => {
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const admin: BankUser = {
+      id: 'admin-id',
+      nom: 'Admin',
+      prenom: 'System',
+      telephone: '0600000000',
+      genre: 'M',
+      cin: 'ADMIN01',
+      nationalite: 'Marocaine',
+      email: 'admin@boa.ma',
+      dateNaissance: '1990-01-01',
+      numeroCompte: 'ADMIN001',
+      motDePasse: 'admin123',
+      solde: 999999,
+      role: 'admin',
+      cartes: [],
+      transactions: []
+    };
+
+    if (!data) {
+      const initialUsers = [admin];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialUsers));
+      return initialUsers;
+    }
+
+    const users: BankUser[] = JSON.parse(data);
+    
+    // S'assurer que l'admin existe toujours, même si d'autres utilisateurs étaient déjà stockés
+    if (!users.some(u => u.numeroCompte === 'ADMIN001')) {
+      users.push(admin);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    }
+    
+    return users;
   },
 
   saveUsers: (users: BankUser[]) => {
@@ -55,7 +88,8 @@ export const BankStorage = {
       ...user,
       id: crypto.randomUUID(),
       numeroCompte,
-      solde: Math.floor(5000 + Math.random() * 20000), // Random starting balance between 5000 and 25000
+      solde: Math.floor(5000 + Math.random() * 20000),
+      role: 'user',
       cartes: [{
         numero: cardNumber,
         bloquee: false,

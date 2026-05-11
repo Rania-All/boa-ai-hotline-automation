@@ -35,7 +35,7 @@ public class ChatService {
         this.ollama = ollama;
     }
 
-    public ChatResponse reply(String message, String sessionId) {
+    public ChatResponse reply(String message, String sessionId, Double solde, String numeroCompte) {
         System.out.println("\n>>> DEBUG: Message reçu du site : [" + message + "]");
         message = message == null ? "" : message.trim();
         if (message.isEmpty()) {
@@ -46,13 +46,13 @@ public class ChatService {
         Intent intent = nlp.detectIntent(message);
         
         if (intent == Intent.VIREMENT) {
-             return triggerRpa(message, "VIREMENT");
+             return triggerRpa(message, "VIREMENT", solde, numeroCompte);
         }
 
         // 2) FAQ Sémantique (Si ce n'est pas un ordre de virement)
         ChatResponse faqResponse = similarityEngine(message);
         if (faqResponse.confidence() >= 0.60) {
-            history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId);
+            history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId, faqResponse.source());
             return faqResponse;
         }
 
@@ -61,15 +61,15 @@ public class ChatService {
                 quick("Vous pouvez consulter votre solde via BOA Mobile, le portail web ou en agence.");
             case OUVERTURE_COMPTE ->
                 quick("Pour ouvrir un compte, munissez-vous de votre CIN et justificatif de domicile.");
-            case VIREMENT -> triggerRpa(message, "VIREMENT");
+            case VIREMENT -> triggerRpa(message, "VIREMENT", solde, numeroCompte);
             case CARTE_BANCAIRE -> quick("Les cartes bancaires BOA sont disponibles sous 5 jours ouvrables.");
             case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
             case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d’un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
-            case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA");
+            case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA", solde, numeroCompte);
             default -> ollamaFallback(message);
         };
 
-        history.save(message, response.answer(), response.confidence(), sessionId);
+        history.save(message, response.answer(), response.confidence(), sessionId, response.source());
         return response;
     }
 
@@ -83,7 +83,7 @@ public class ChatService {
         return new ChatResponse(llm, 0.55, "OLLAMA_RAG", List.of());
     }
 
-    private ChatResponse triggerRpa(String message, String action) {
+    private ChatResponse triggerRpa(String message, String action, Double solde, String numeroCompte) {
         // Extraction intelligente des paramètres via Ollama
         String prompt = "Extrait le montant (chiffre), le nom du bénéficiaire et le numéro de compte de cette phrase: \"" + message + 
                        "\". Répond uniquement au format JSON: {\"montant\": \"...\", \"beneficiaire\": \"...\", \"compte\": \"...\"}";
@@ -116,6 +116,17 @@ public class ChatService {
                 "in_Reason", "Virement via Chatbot"
         );
 
+        // Vérification fonctionnelle du solde
+        double montantValue = 0;
+        try { montantValue = Double.parseDouble(montant); } catch (Exception e) {}
+
+        if (solde != null && solde < montantValue) {
+            return new ChatResponse(
+                "❌ Échec de l'opération : Tu n'as pas assez de solde dans ton compte pour effectuer ce virement de " + montantValue + " DH (Solde actuel: " + solde + " DH).",
+                1.0, "RPA_ERROR_FUNCTIONAL", List.of("Consulter solde", "Modifier montant")
+            );
+        }
+
         UiPathOrchestratorClient.StartJobResult started = rpa.startJob(uipathArgs);
 
         if ("DISABLED".equalsIgnoreCase(started.state())) {
@@ -125,10 +136,20 @@ public class ChatService {
                     0.6, "RPA", List.of("Activer UiPath Orchestrator"));
         }
 
+        if (started.jobKey() == null) {
+            return new ChatResponse(
+                "⚠️ Erreur Technique : Impossible de lancer le robot RPA. " + (started.message() != null ? started.message() : "Vérifiez la connexion avec l'Orchestrator."),
+                1.0, "RPA_ERROR_TECHNICAL", List.of("Réessayer plus tard", "Contacter support")
+            );
+        }
+
         return new ChatResponse(
-                "J'ai lancé le robot RPA pour effectuer votre " + action.toLowerCase() + " de " + montant + " DH vers " + beneficiaire + ". " +
-                (started.jobKey() != null ? "ID Job: " + started.jobKey() : ""),
-                0.9, "RPA", List.of("Suivre le statut sur l'Orchestrator"));
+                "✅ Demande reçue. J'ai lancé le robot RPA pour effectuer votre " + action.toLowerCase() + " de " + montant + " DH vers " + beneficiaire + ". (ID: " + started.jobKey() + ")",
+                0.9, "RPA_STARTED", List.of("Suivre le statut"), started.jobKey(), "STARTED");
+    }
+
+    public Map<?, ?> getJobStatus(String jobKey) {
+        return rpa.getJobStatus(jobKey);
     }
 
     /** Advanced Hybrid Similarity (Semantic + Keyword Overlap) */
@@ -193,7 +214,12 @@ public class ChatService {
     public record ChatResponse(
             String answer,
             double confidence,
-            String matchedQuestion,
-            List<String> suggestions) {
+            String source,
+            List<String> suggestions,
+            String jobKey,
+            String status) {
+        public ChatResponse(String answer, double confidence, String source, List<String> suggestions) {
+            this(answer, confidence, source, suggestions, null, null);
+        }
     }
 }

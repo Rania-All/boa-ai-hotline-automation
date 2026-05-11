@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, PlusCircle, Zap, Shield, Bot, ChevronRight, Sparkles, Activity } from 'lucide-react';
 import MessageBubble from '../components/MessageBubble';
 import TypingIndicator from '../components/TypingIndicator';
-import { askQuestion, getSessionHistory, triggerRpaWorkflow, notifyUserByEmail } from '../services/api';
+import { askQuestion, getSessionHistory, triggerRpaWorkflow, notifyUserByEmail, getJobStatus } from '../services/api';
 import { clearSession, getSessionId } from '../utils/session';
 import type { Message } from '../types';
 import { routeQuestion } from '../utils/chatRouter';
@@ -70,12 +70,15 @@ export default function Chat() {
       const route = routeQuestion(text);
       setClassificationTag(route.type);
 
-      const resp = await askQuestion(text, sessionId);
+      // On récupère l'utilisateur connecté pour le solde (simulation)
+      const userStr = localStorage.getItem('boa_bank_current_user');
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      const resp = await askQuestion(text, sessionId, user?.solde, user?.numeroCompte);
       
-      // Si le backend a déclenché un RPA, il renvoie l'info dans la réponse
-      // Pour l'instant, on affiche simplement la réponse du serveur Java
+      const botMsgId = `b-${Date.now()}`;
       setMessages(prev => [...prev, { 
-        id: `b-${Date.now()}`, 
+        id: botMsgId, 
         question: '', 
         answer: resp.answer, 
         confidence: resp.confidence || 0.9, 
@@ -83,9 +86,14 @@ export default function Chat() {
         isUser: false 
       }]);
 
-      // On met à jour le tag avec celui du serveur s'il existe
+      // Gestion du tag de source
       if (resp.source) {
-          setClassificationTag(resp.source === 'RPA' ? 'N1-RR' : 'N1-IN');
+          setClassificationTag(resp.source.startsWith('RPA') ? 'N1-RR' : 'N1-IN');
+      }
+
+      // Si c'est un RPA lancé, on commence le polling
+      if (resp.source === 'RPA_STARTED' && resp.jobKey) {
+          pollJobStatus(resp.jobKey, botMsgId);
       }
 
     } catch (error) {
@@ -95,6 +103,46 @@ export default function Chat() {
       setIsLoading(false);
       inputRef.current?.focus();
     }
+  };
+
+  const pollJobStatus = async (jobKey: string, messageId: string) => {
+    let finished = false;
+    let attempts = 0;
+    
+    // On ajoute un indicateur "En cours" au message
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, answer: m.answer + "\n\n⏳ *Traitement en cours par le robot...*" } : m));
+
+    const interval = setInterval(async () => {
+      attempts++;
+      if (attempts > 20) { // Timeout 1 minute (3s * 20)
+          clearInterval(interval);
+          setMessages(prev => prev.map(m => m.id === messageId ? { ...m, answer: m.answer + "\n\n⚠️ *Le délai d'attente est dépassé. Veuillez vérifier le statut sur votre espace client.*" } : m));
+          return;
+      }
+
+      try {
+        const statusData = await getJobStatus(jobKey);
+        // On suppose que statusData contient une liste 'value' dont le premier élément a 'State'
+        const job = statusData.value?.[0];
+        const state = job?.State;
+
+        if (state === 'Successful') {
+          clearInterval(interval);
+          setMessages(prev => prev.map(m => m.id === messageId ? { 
+            ...m, 
+            answer: "✅ **Opération Réussie !**\n\nLe virement a été effectué avec succès par notre automate RPA. Votre solde sera mis à jour prochainement." 
+          } : m));
+        } else if (state === 'Faulted' || state === 'Canceled') {
+          clearInterval(interval);
+          setMessages(prev => prev.map(m => m.id === messageId ? { 
+            ...m, 
+            answer: "❌ **Échec de l'Automate**\n\nLe robot a rencontré une erreur lors de l'exécution (State: " + state + "). Veuillez réessayer ou contacter le support technique." 
+          } : m));
+        }
+      } catch (e) {
+        console.error("Polling error:", e);
+      }
+    }, 3000);
   };
 
   const handleNewChat = () => {

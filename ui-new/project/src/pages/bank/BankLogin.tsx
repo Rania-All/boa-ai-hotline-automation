@@ -27,7 +27,13 @@ const BankLogin = () => {
     if (user && user.motDePasse === password) {
       // Success
       localStorage.setItem('boa_bank_current_user', JSON.stringify(user));
-      navigate('/bank/dashboard');
+      
+      // Si c'est un admin, on le renvoie vers l'interface chatbot qui affichera le dashboard admin
+      if (user.role === 'admin') {
+        navigate('/');
+      } else {
+        navigate('/bank/dashboard');
+      }
     } else {
       // Failed attempt
       const newAttempts = attempts + 1;

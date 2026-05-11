@@ -13,8 +13,8 @@ public class ChatHistoryService {
         this.repo = repo;
     }
 
-    public void save(String question, String answer, double confidence, String sessionId) {
-        repo.save(new ChatHistory(question, answer, confidence, sessionId));
+    public void save(String question, String answer, double confidence, String sessionId, String source) {
+        repo.save(new ChatHistory(question, answer, confidence, sessionId, source));
     }
 
     public List<ChatHistory> getAll() {

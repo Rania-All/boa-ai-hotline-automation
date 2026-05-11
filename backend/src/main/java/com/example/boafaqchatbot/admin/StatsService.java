@@ -38,11 +38,16 @@ public class StatsService {
                 .mapToDouble(ChatHistory::getConfidence)
                 .max().orElse(0);
 
+        Map<String, Long> sourceCounts = list.stream()
+                .filter(c -> c.getSource() != null)
+                .collect(Collectors.groupingBy(ChatHistory::getSource, Collectors.counting()));
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("total", list.size());
         stats.put("avgConfidence", Math.round(avgConfidence * 100.0) / 100.0);
         stats.put("maxConfidence", Math.round(maxConfidence * 100.0) / 100.0);
         stats.put("top5", top5);
+        stats.put("sources", sourceCounts);
 
         return stats;
     }

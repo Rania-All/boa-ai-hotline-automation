@@ -18,11 +18,16 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    public record AskBody(@NotBlank String question, String sessionId) {}
+    public record AskBody(@NotBlank String question, String sessionId, Double solde, String numeroCompte) {}
 
     @PostMapping("/ask")
     public ChatService.ChatResponse ask(@Valid @RequestBody AskBody body) {
-        return chatService.reply(body.question(), body.sessionId());
+        return chatService.reply(body.question(), body.sessionId(), body.solde(), body.numeroCompte());
+    }
+
+    @GetMapping("/job-status/{jobKey}")
+    public Object getJobStatus(@PathVariable String jobKey) {
+        return chatService.getJobStatus(jobKey);
     }
 }
 
