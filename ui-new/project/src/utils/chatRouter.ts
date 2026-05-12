@@ -3,7 +3,8 @@ export type IntentCode =
   | 'INFO_BMCE_DIRECT'
   | 'CARD_UNBLOCK'
   | 'GET_BALANCE'
-  | 'DOTATION_ACTIVATE'
+  | 'DOTATION_ECOMMERCE'
+  | 'DOTATION_TOURISTIQUE'
   | 'EXTERNAL_TRANSFER'
   | 'TEG_INFO'
   | 'GREETING'
@@ -79,18 +80,28 @@ const RULES: Rule[] = [
     confidence: 0.95,
   },
   {
-    intent: 'DOTATION_ACTIVATE',
+    intent: 'DOTATION_ECOMMERCE',
     type: 'N1-RR',
     patterns: [
-      'activer ma dotation',
       'dotation e commerce',
       'dotation ecommerce',
-      /activ\w*\s+.*dotation/i,
       /dotation.*ecommerce/i,
       /dotation.*internet/i,
-      /dotation.*voyage/i
+      /activer.*ecommerce/i
     ],
     answer: "D'accord, je demande au robot RPA d'activer votre dotation e-commerce tout de suite.",
+    confidence: 0.95,
+  },
+  {
+    intent: 'DOTATION_TOURISTIQUE',
+    type: 'N1-RR',
+    patterns: [
+      'dotation touristique',
+      /dotation.*touristique/i,
+      /dotation.*voyage/i,
+      /activer.*touristique/i
+    ],
+    answer: "C'est entendu, je lance la procédure d'activation de votre dotation touristique.",
     confidence: 0.95,
   },
   {

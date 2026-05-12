@@ -130,7 +130,7 @@ export default function Chat() {
           clearInterval(interval);
           setMessages(prev => prev.map(m => m.id === messageId ? { 
             ...m, 
-            answer: "✅ **Opération Réussie !**\n\nLe virement a été effectué avec succès par notre automate RPA. Votre solde sera mis à jour prochainement." 
+            answer: "✅ L'opération a été effectuée avec succès par le robot RPA !"
           } : m));
         } else if (state === 'Faulted' || state === 'Canceled') {
           clearInterval(interval);

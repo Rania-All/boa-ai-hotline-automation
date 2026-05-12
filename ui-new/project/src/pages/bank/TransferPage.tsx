@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BankStorage, BankUser } from '../../utils/BankStorage';
 import { Send, CheckCircle, Smartphone, AlertCircle, Clock, Mail } from 'lucide-react';
 
@@ -8,6 +9,7 @@ const EMAILJS_TEMPLATE_ID = 'template_my0666o';
 const EMAILJS_PUBLIC_KEY = 'Em0KkG5gc3kWRhUjQ';
 
 const TransferPage = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<BankUser | null>(null);
   const [destinataire, setDestinataire] = useState('');
   const [montant, setMontant] = useState('');
@@ -156,10 +158,10 @@ const TransferPage = () => {
             <h3 className="text-2xl font-bold text-gray-800">Virement Terminé !</h3>
             <p className="text-gray-600">Votre transfert a été traité avec succès.</p>
             <button
-              onClick={reset}
-              className="mt-6 px-8 py-3 bg-[#0B3D91] text-white rounded-xl hover:bg-[#08306B] transition-all font-bold"
+              onClick={() => navigate('/')}
+              className="mt-6 px-8 py-3 bg-[#0B3D91] text-white rounded-xl hover:bg-[#08306B] transition-all font-bold flex items-center justify-center gap-2 mx-auto"
             >
-              Nouveau virement
+              Retour au Chatbot
             </button>
           </div>
         ) : (

@@ -39,10 +39,12 @@ export default function LoginChatbot() {
 
     try {
       if (activeTab === 'admin') {
+        const trimmedCompte = numeroCompte.trim();
+        const trimmedPassword = password.trim();
         const users = BankStorage.getUsers();
-        const admin = users.find(u => u.numeroCompte === numeroCompte && u.role === 'admin');
+        const admin = users.find(u => u.numeroCompte === trimmedCompte && u.role === 'admin');
         
-        if (admin && admin.motDePasse === password) {
+        if (admin && admin.motDePasse === trimmedPassword) {
           localStorage.setItem('boa_bank_current_user', JSON.stringify(admin));
           window.location.href = '/'; // Redirige vers App.tsx qui gère le dashboard admin
         } else {
@@ -50,8 +52,11 @@ export default function LoginChatbot() {
         }
       } else {
         if (mode === 'login') {
-          const user = BankStorage.getUserByCompte(numeroCompte);
-          if (user && user.motDePasse === password && user.role === 'user') {
+          const trimmedCompte = numeroCompte.trim();
+          const trimmedPassword = password.trim();
+          const user = BankStorage.getUserByCompte(trimmedCompte);
+          
+          if (user && user.motDePasse === trimmedPassword && user.role === 'user') {
             localStorage.setItem('boa_bank_current_user', JSON.stringify(user));
             window.location.href = '/';
           } else {
@@ -111,10 +116,6 @@ export default function LoginChatbot() {
               <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                 <Bot className="text-blue-400" size={20} />
               </div>
-              <div className="text-sm">
-                <div className="text-white font-medium">Assistant NLP Actif</div>
-                <div className="text-gray-500">Précision de réponse : 98%</div>
-              </div>
             </div>
           </div>
         </div>
@@ -140,7 +141,7 @@ export default function LoginChatbot() {
           <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-white mb-2">
-                {activeTab === 'admin' ? 'Espace Admin' : (mode === 'login' ? 'Bon retour !' : 'Rejoignez-nous')}
+                {activeTab === 'admin' ? 'Espace Admin' : (mode === 'login' ? 'Espace Client' : 'Rejoignez-nous')}
               </h2>
               <p className="text-gray-400">
                 {activeTab === 'admin' 

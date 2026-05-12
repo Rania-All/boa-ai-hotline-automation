@@ -48,6 +48,15 @@ public class ChatService {
         if (intent == Intent.VIREMENT) {
              return triggerRpa(message, "VIREMENT", solde, numeroCompte);
         }
+        if (intent == Intent.CARD_UNBLOCK) {
+            return triggerCardRpa("CARD_UNBLOCK", "déblocage de carte");
+        }
+        if (intent == Intent.DOTATION_ECOMMERCE) {
+            return triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce");
+        }
+        if (intent == Intent.DOTATION_TOURISTIQUE) {
+            return triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique");
+        }
 
         // 2) FAQ Sémantique (Si ce n'est pas un ordre de virement)
         ChatResponse faqResponse = similarityEngine(message);
@@ -62,11 +71,14 @@ public class ChatService {
             case OUVERTURE_COMPTE ->
                 quick("Pour ouvrir un compte, munissez-vous de votre CIN et justificatif de domicile.");
             case VIREMENT -> triggerRpa(message, "VIREMENT", solde, numeroCompte);
+            case CARD_UNBLOCK -> triggerCardRpa("CARD_UNBLOCK", "déblocage de carte");
+            case DOTATION_ECOMMERCE -> triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce");
+            case DOTATION_TOURISTIQUE -> triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique");
             case CARTE_BANCAIRE -> quick("Les cartes bancaires BOA sont disponibles sous 5 jours ouvrables.");
             case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
             case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d’un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
             case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA", solde, numeroCompte);
-            default -> ollamaFallback(message);
+            default -> quick("Je n'ai pas compris votre question.");
         };
 
         history.save(message, response.answer(), response.confidence(), sessionId, response.source());
@@ -86,13 +98,15 @@ public class ChatService {
     private ChatResponse triggerRpa(String message, String action, Double solde, String numeroCompte) {
         // Extraction intelligente des paramètres via Ollama
         String prompt = "Extrait le montant (chiffre), le nom du bénéficiaire et le numéro de compte de cette phrase: \"" + message + 
-                       "\". Répond uniquement au format JSON: {\"montant\": \"...\", \"beneficiaire\": \"...\", \"compte\": \"...\"}";
+                       "\". Répond uniquement au format JSON: {\"montant\": \"...\", \"beneficiaire\": \"...\", \"compte\": \"...\",\"intentCode\": \"...\"}";
         String extractionJson = ollama.generate(prompt);
         
         // Nettoyage du JSON
         String montant = "0";
         String beneficiaire = "Inconnu";
         String compte = "0000000000";
+        String intentCode = "0";
+
         try {
             if (extractionJson.contains("\"montant\"")) {
                 montant = extractionJson.split("\"montant\":")[1].split(",")[0].replaceAll("[^0-9]", "");
@@ -103,12 +117,17 @@ public class ChatService {
             if (extractionJson.contains("\"compte\"")) {
                 compte = extractionJson.split("\"compte\":")[1].split("}")[0].replaceAll("[^0-9]", "").trim();
             }
+            if (extractionJson.contains("\"intentCode\"")) {
+                intentCode = extractionJson.split("\"intentCode\":")[1].split("}")[0].replaceAll("[^0-9]", "").trim();
+            }
         } catch (Exception e) {
             // Fallback
         }
-
+        System.out.println("IntentCode");
         // Préparation des arguments pour UiPath
+
         Map<String, Object> uipathArgs = Map.of(
+                "in_IntentCode", "VIREMENT",
                 "in_Amount", montant,
                 "in_BeneficiaryName", beneficiaire,
                 "in_SourceAccount", compte,
@@ -150,6 +169,27 @@ public class ChatService {
 
     public Map<?, ?> getJobStatus(String jobKey) {
         return rpa.getJobStatus(jobKey);
+    }
+
+    private ChatResponse triggerCardRpa(String intentCode, String actionLabel) {
+        // Pour les cartes, on envoie juste l'intention au robot
+        Map<String, Object> uipathArgs = Map.of(
+                "in_IntentCode", intentCode,
+                "in_UserEmail", "raniaalgui4@gmail.com"
+        );
+
+        UiPathOrchestratorClient.StartJobResult started = rpa.startJob(uipathArgs);
+
+        if (started.jobKey() == null) {
+            return new ChatResponse(
+                "⚠️ Erreur : Impossible de lancer le robot pour votre " + actionLabel + ".",
+                1.0, "RPA_ERROR", List.of("Contacter support")
+            );
+        }
+
+        return new ChatResponse(
+                "✅ Demande reçue. Je lance le robot pour votre " + actionLabel + ". (ID: " + started.jobKey() + ")",
+                0.9, "RPA_STARTED", List.of("Vérifier mes cartes"), started.jobKey(), "STARTED");
     }
 
     /** Advanced Hybrid Similarity (Semantic + Keyword Overlap) */

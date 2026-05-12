@@ -44,23 +44,94 @@ export const BankStorage = {
       dateNaissance: '1990-01-01',
       numeroCompte: 'ADMIN001',
       motDePasse: 'admin123',
-      solde: 999999,
+      solde: 0,
       role: 'admin',
       cartes: [],
       transactions: []
     };
 
+    const rania: BankUser = {
+      id: 'rania-id',
+      nom: 'ALGUI',
+      prenom: 'Rania',
+      telephone: '0600000001',
+      genre: 'F',
+      cin: 'RANIA01',
+      nationalite: 'Marocaine',
+      email: 'raniaalgui4@gmail.com',
+      dateNaissance: '2003-10-24',
+      numeroCompte: '0111175501',
+      motDePasse: '123456789',
+      solde: 13099.01,
+      role: 'user',
+      cartes: [{
+        numero: '4242 8888 7777 0101',
+        bloquee: false,
+        dotationEcommerce: false,
+        dotationTouristique: false
+      }],
+      transactions: []
+    };
+
     if (!data) {
-      const initialUsers = [admin];
+      const initialUsers = [admin, rania];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initialUsers));
       return initialUsers;
     }
 
-    const users: BankUser[] = JSON.parse(data);
+    let users: BankUser[] = JSON.parse(data);
     
-    // S'assurer que l'admin existe toujours, même si d'autres utilisateurs étaient déjà stockés
-    if (!users.some(u => u.numeroCompte === 'ADMIN001')) {
-      users.push(admin);
+    // Cleanup old test accounts to keep the table clean
+    users = users.filter((u, index, self) => 
+      index === self.findIndex((t) => t.numeroCompte === u.numeroCompte)
+    );
+
+    let updated = false;
+    // S'assurer que l'admin existe toujours
+    const adminIndex = users.findIndex(u => u.numeroCompte === 'ADMIN001');
+    if (adminIndex === -1) {
+      users.unshift(admin);
+      updated = true;
+    } else {
+      let needsUpdate = false;
+      if (users[adminIndex].motDePasse !== 'admin123') {
+        users[adminIndex].motDePasse = 'admin123';
+        needsUpdate = true;
+      }
+      if (users[adminIndex].role !== 'admin') {
+        users[adminIndex].role = 'admin';
+        needsUpdate = true;
+      }
+      if (needsUpdate) updated = true;
+    }
+
+    // S'assurer que Rania existe toujours avec le bon mot de passe
+    const raniaIndex = users.findIndex(u => u.numeroCompte === '0111175501');
+    if (raniaIndex === -1) {
+      users.push(rania);
+      updated = true;
+    } else {
+      let needsUpdate = false;
+      if (users[raniaIndex].email !== rania.email) {
+        users[raniaIndex].email = rania.email;
+        needsUpdate = true;
+      }
+      if (users[raniaIndex].motDePasse !== '123456789') {
+        users[raniaIndex].motDePasse = '123456789';
+        needsUpdate = true;
+      }
+      if (users[raniaIndex].role !== 'user') {
+        users[raniaIndex].role = 'user';
+        needsUpdate = true;
+      }
+      if (!users[raniaIndex].cartes || users[raniaIndex].cartes.length === 0) {
+        users[raniaIndex].cartes = rania.cartes;
+        needsUpdate = true;
+      }
+      if (needsUpdate) updated = true;
+    }
+
+    if (updated || users.length !== JSON.parse(data).length) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
     }
     
@@ -150,6 +221,36 @@ export const BankStorage = {
       });
     }
 
+    BankStorage.saveUsers(users);
+    return true;
+  },
+
+  setCardStatus: (numeroCompte: string, blocked: boolean): boolean => {
+    const users = BankStorage.getUsers();
+    const userIndex = users.findIndex(u => u.numeroCompte === numeroCompte);
+    if (userIndex === -1 || users[userIndex].cartes.length === 0) return false;
+
+    users[userIndex].cartes[0].bloquee = blocked;
+    BankStorage.saveUsers(users);
+    return true;
+  },
+
+  setDotationEcommerce: (numeroCompte: string, active: boolean): boolean => {
+    const users = BankStorage.getUsers();
+    const userIndex = users.findIndex(u => u.numeroCompte === numeroCompte);
+    if (userIndex === -1 || users[userIndex].cartes.length === 0) return false;
+
+    users[userIndex].cartes[0].dotationEcommerce = active;
+    BankStorage.saveUsers(users);
+    return true;
+  },
+
+  setDotationTouristique: (numeroCompte: string, active: boolean): boolean => {
+    const users = BankStorage.getUsers();
+    const userIndex = users.findIndex(u => u.numeroCompte === numeroCompte);
+    if (userIndex === -1 || users[userIndex].cartes.length === 0) return false;
+
+    users[userIndex].cartes[0].dotationTouristique = active;
     BankStorage.saveUsers(users);
     return true;
   }

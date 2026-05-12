@@ -116,7 +116,7 @@ public class UiPathOrchestratorClient {
         String token = fetchAccessToken();
         String folderId = props.getFolderId();
         return web.get()
-                .uri("/odata/Jobs?$filter=Key eq " + quote(jobKey))
+                .uri("/odata/Jobs?$filter=Key eq " + jobKey)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .header("X-UIPATH-OrganizationUnitId", folderId == null ? "" : folderId)
                 .accept(MediaType.APPLICATION_JSON)

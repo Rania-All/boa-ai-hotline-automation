@@ -10,14 +10,9 @@ public class IntentDetector {
         if (text == null) return Intent.UNKNOWN;
         text = TextNorm.norm(text);
 
-        // RPA N1-RR (exemples: attestations, relevés, documents, activation)
+        // RPA N1-RR (exemples: attestations, relevés, documents)
         if (text.contains("attestation") || text.contains("relev") || text.contains("document")
-                || (text.contains("activer") && text.contains("carte"))
-                || (text.contains("modifier") && text.contains("coordonn"))
-                || (text.contains("carte") && text.contains("bloquee"))
-                || (text.contains("solde") && (text.contains("verifier") || text.contains("consulter")))
-                || (text.contains("dotation") && (text.contains("activer") || text.contains("activation")))
-                || (text.contains("virement") && (text.contains("externe") || text.contains("mise a disposition")))) {
+                || (text.contains("modifier") && text.contains("coordonn"))) {
             return Intent.RPA_N1_RR;
         }
 
@@ -29,6 +24,15 @@ public class IntentDetector {
 
         if (text.contains("virement") || text.contains("transfert"))
             return Intent.VIREMENT;
+
+        if (text.contains("debloquer") && text.contains("carte"))
+            return Intent.CARD_UNBLOCK;
+
+        if (text.contains("dotation") && (text.contains("ecommerce") || text.contains("e commerce") || text.contains("internet") || text.contains("vna")))
+            return Intent.DOTATION_ECOMMERCE;
+
+        if (text.contains("dotation") && (text.contains("touristique") || text.contains("voyage")))
+            return Intent.DOTATION_TOURISTIQUE;
 
         if (text.contains("carte") && (text.contains("bloquer") || text.contains("bloquee") || text.contains("perdu") || text.contains("vol")))
             return Intent.BLOQUER_CARTE;

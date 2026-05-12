@@ -67,13 +67,17 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           </button>
         )}
 
-        <div className="nav-divider" />
-        <div className="nav-section-label">Outils</div>
+        {(role === 'user' || role === 'guest') && (
+          <>
+            <div className="nav-divider" />
+            <div className="nav-section-label">Outils</div>
+            <button onClick={() => navigate('/bank/login')} className="nav-item">
+              <Building size={18} />
+              <span>Portail Bancaire</span>
+            </button>
+          </>
+        )}
 
-        <button onClick={() => navigate('/bank/login')} className="nav-item nav-portal">
-          <Building size={18} />
-          <span>Portail Bancaire</span>
-        </button>
       </nav>
 
       {/* Metrics card */}

@@ -1,11 +1,20 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, CreditCard, Send, Home, Settings, Bot, Shield } from 'lucide-react';
+import { BankStorage } from '../../utils/BankStorage';
 
 const BankLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUserStr = localStorage.getItem('boa_bank_current_user');
-  const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+  let currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+
+  // Sync with storage to get latest updates (like the new card)
+  if (currentUser) {
+    const freshUser = BankStorage.getUserByCompte(currentUser.numeroCompte);
+    if (freshUser) {
+      currentUser = freshUser;
+    }
+  }
 
   if (!currentUser) {
     navigate('/bank/login');
