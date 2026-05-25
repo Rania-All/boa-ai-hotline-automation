@@ -49,13 +49,15 @@ function ChatbotApp() {
 
       {/* Main Content Area - Forçage du remplissage vertical */}
       <main style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {currentPage === 'chat' ? (
+        <div style={{ display: currentPage === 'chat' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
           <Chat />
-        ) : currentPage === 'history' ? (
+        </div>
+        <div style={{ display: currentPage === 'history' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
           <History onBackToChat={() => setCurrentPage('chat')} />
-        ) : (
+        </div>
+        <div style={{ display: currentPage === 'admin' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
           <AdminDashboard />
-        )}
+        </div>
       </main>
     </div>
   );

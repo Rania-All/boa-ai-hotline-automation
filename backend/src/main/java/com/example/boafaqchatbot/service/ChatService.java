@@ -35,7 +35,7 @@ public class ChatService {
         this.ollama = ollama;
     }
 
-    public ChatResponse reply(String message, String sessionId, Double solde, String numeroCompte) {
+    public ChatResponse reply(String message, String sessionId, Double solde, String numeroCompte, String userEmail) {
         System.out.println("\n>>> DEBUG: Message reçu du site : [" + message + "]");
         message = message == null ? "" : message.trim();
         if (message.isEmpty()) {
@@ -44,46 +44,49 @@ public class ChatService {
 
         // 1) Intent NLP (Priorité au déclenchement du Robot)
         Intent intent = nlp.detectIntent(message);
-        
+
+        // On capture la réponse dans une variable pour TOUJOURS enregistrer dans l'historique
+        ChatResponse response;
+
         if (intent == Intent.VIREMENT) {
-             return triggerRpa(message, "VIREMENT", solde, numeroCompte);
-        }
-        if (intent == Intent.CARD_UNBLOCK) {
-            return triggerCardRpa("CARD_UNBLOCK", "déblocage de carte");
-        }
-        if (intent == Intent.DOTATION_ECOMMERCE) {
-            return triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce");
-        }
-        if (intent == Intent.DOTATION_TOURISTIQUE) {
-            return triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique");
+            response = triggerRpa(message, "VIREMENT", solde, numeroCompte, userEmail);
+        } else if (intent == Intent.CARD_UNBLOCK) {
+            response = triggerCardRpa("CARD_UNBLOCK", "déblocage de carte", userEmail);
+        } else if (intent == Intent.DOTATION_ECOMMERCE) {
+            response = triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce", userEmail);
+        } else if (intent == Intent.DOTATION_TOURISTIQUE) {
+            response = triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique", userEmail);
+        } else {
+            // 2) FAQ Sémantique
+            ChatResponse faqResponse = similarityEngine(message);
+            if (faqResponse.confidence() >= 0.60) {
+                history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId, faqResponse.source());
+                return faqResponse;
+            }
+
+            // 3) Switch sur intent NLP
+            response = switch (intent) {
+                case CONSULTER_SOLDE ->
+                    quick("Vous pouvez consulter votre solde via BOA Mobile, le portail web ou en agence.");
+                case OUVERTURE_COMPTE ->
+                    quick("Pour ouvrir un compte, munissez-vous de votre CIN et justificatif de domicile.");
+                case VIREMENT -> triggerRpa(message, "VIREMENT", solde, numeroCompte, userEmail);
+                case CARD_UNBLOCK -> triggerCardRpa("CARD_UNBLOCK", "déblocage de carte", userEmail);
+                case DOTATION_ECOMMERCE -> triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce", userEmail);
+                case DOTATION_TOURISTIQUE -> triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique", userEmail);
+                case CARTE_BANCAIRE -> quick("Les cartes bancaires BOA sont disponibles sous 5 jours ouvrables.");
+                case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
+                case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d'un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
+                case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA", solde, numeroCompte, userEmail);
+                default -> quick("Je n'ai pas compris votre question.");
+            };
         }
 
-        // 2) FAQ Sémantique (Si ce n'est pas un ordre de virement)
-        ChatResponse faqResponse = similarityEngine(message);
-        if (faqResponse.confidence() >= 0.60) {
-            history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId, faqResponse.source());
-            return faqResponse;
-        }
-
-        ChatResponse response = switch (intent) {
-            case CONSULTER_SOLDE ->
-                quick("Vous pouvez consulter votre solde via BOA Mobile, le portail web ou en agence.");
-            case OUVERTURE_COMPTE ->
-                quick("Pour ouvrir un compte, munissez-vous de votre CIN et justificatif de domicile.");
-            case VIREMENT -> triggerRpa(message, "VIREMENT", solde, numeroCompte);
-            case CARD_UNBLOCK -> triggerCardRpa("CARD_UNBLOCK", "déblocage de carte");
-            case DOTATION_ECOMMERCE -> triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce");
-            case DOTATION_TOURISTIQUE -> triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique");
-            case CARTE_BANCAIRE -> quick("Les cartes bancaires BOA sont disponibles sous 5 jours ouvrables.");
-            case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
-            case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d’un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
-            case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA", solde, numeroCompte);
-            default -> quick("Je n'ai pas compris votre question.");
-        };
-
+        // Enregistrement dans l'historique pour TOUS les cas (RPA, erreurs logiques, NLP...)
         history.save(message, response.answer(), response.confidence(), sessionId, response.source());
         return response;
     }
+
 
     private ChatResponse ollamaFallback(String message) {
         String llm = ollamaRag.answerWithFaqContext(message);
@@ -95,7 +98,7 @@ public class ChatService {
         return new ChatResponse(llm, 0.55, "OLLAMA_RAG", List.of());
     }
 
-    private ChatResponse triggerRpa(String message, String action, Double solde, String numeroCompte) {
+    private ChatResponse triggerRpa(String message, String action, Double solde, String numeroCompte, String userEmail) {
         // Extraction intelligente des paramètres via Ollama
         String prompt = "Extrait le montant (chiffre), le nom du bénéficiaire et le numéro de compte de cette phrase: \"" + message + 
                        "\". Répond uniquement au format JSON: {\"montant\": \"...\", \"beneficiaire\": \"...\", \"compte\": \"...\",\"intentCode\": \"...\"}";
@@ -131,18 +134,43 @@ public class ChatService {
                 "in_Amount", montant,
                 "in_BeneficiaryName", beneficiaire,
                 "in_SourceAccount", compte,
-                "in_UserEmail", "raniaalgui4@gmail.com",
+                "in_UserEmail", userEmail,
                 "in_Reason", "Virement via Chatbot"
         );
 
-        // Vérification fonctionnelle du solde
+        // ── VERIFICATIONS FONCTIONNELLES & LOGIQUES ──
         double montantValue = 0;
         try { montantValue = Double.parseDouble(montant); } catch (Exception e) {}
 
+        // Cas 1 : Montant invalide ou égal à zéro
+        if (montantValue <= 0) {
+            return new ChatResponse(
+                "❌ Opération refusée : Le montant spécifié doit être supérieur à 0 DH pour effectuer un virement.",
+                1.0, "RPA_ERROR_INVALID_AMOUNT", List.of("Modifier le montant", "Retour")
+            );
+        }
+
+        // Cas 2 : Dépassement de la limite de transfert autorisée par le Chatbot
+        if (montantValue > 20000) {
+            return new ChatResponse(
+                "❌ Limite de sécurité dépassée : Le montant maximum autorisé pour un virement via l'assistant virtuel est de 20 000 DH (Montant demandé : " + montantValue + " DH).\n\nPour les montants plus élevés, veuillez utiliser votre espace de banque en ligne ou vous rendre en agence.",
+                1.0, "RPA_ERROR_LIMIT_EXCEEDED", List.of("Modifier le montant", "Contacter le conseiller")
+            );
+        }
+
+        // Cas 3 : Numéro de compte destinataire invalide
+        if (compte == null || compte.trim().isEmpty() || compte.length() < 10 || "0000000000".equals(compte)) {
+            return new ChatResponse(
+                "❌ Compte destinataire invalide : Le numéro de compte détecté (" + (compte != null ? compte : "vide") + ") est incorrect.\n\nVeuillez spécifier un numéro de compte valide comportant au moins 10 chiffres.",
+                1.0, "RPA_ERROR_INVALID_ACCOUNT", List.of("Saisir un autre compte", "Retour")
+            );
+        }
+
+        // Cas 4 : Solde insuffisant (Vérification du solde actuel du compte émetteur)
         if (solde != null && solde < montantValue) {
             return new ChatResponse(
-                "❌ Échec de l'opération : Tu n'as pas assez de solde dans ton compte pour effectuer ce virement de " + montantValue + " DH (Solde actuel: " + solde + " DH).",
-                1.0, "RPA_ERROR_FUNCTIONAL", List.of("Consulter solde", "Modifier montant")
+                "❌ Échec de l'opération : Vous ne disposez pas d'un solde suffisant pour effectuer ce virement de " + montantValue + " DH (Votre solde actuel : " + solde + " DH).",
+                1.0, "RPA_ERROR_INSUFFICIENT_BALANCE", List.of("Consulter mon solde", "Modifier le montant")
             );
         }
 
@@ -171,11 +199,11 @@ public class ChatService {
         return rpa.getJobStatus(jobKey);
     }
 
-    private ChatResponse triggerCardRpa(String intentCode, String actionLabel) {
+    private ChatResponse triggerCardRpa(String intentCode, String actionLabel, String userEmail) {
         // Pour les cartes, on envoie juste l'intention au robot
         Map<String, Object> uipathArgs = Map.of(
                 "in_IntentCode", intentCode,
-                "in_UserEmail", "raniaalgui4@gmail.com"
+                "in_UserEmail", userEmail
         );
 
         UiPathOrchestratorClient.StartJobResult started = rpa.startJob(uipathArgs);

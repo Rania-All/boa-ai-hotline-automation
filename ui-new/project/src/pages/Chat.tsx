@@ -74,7 +74,7 @@ export default function Chat() {
       const userStr = localStorage.getItem('boa_bank_current_user');
       const user = userStr ? JSON.parse(userStr) : null;
 
-      const resp = await askQuestion(text, sessionId, user?.solde, user?.numeroCompte);
+      const resp = await askQuestion(text, sessionId, user?.solde, user?.numeroCompte, user?.email);
       
       const botMsgId = `b-${Date.now()}`;
       setMessages(prev => [...prev, { 
@@ -106,23 +106,24 @@ export default function Chat() {
   };
 
   const pollJobStatus = async (jobKey: string, messageId: string) => {
-    let finished = false;
     let attempts = 0;
+    let consecutiveErrors = 0;
     
     // On ajoute un indicateur "En cours" au message
     setMessages(prev => prev.map(m => m.id === messageId ? { ...m, answer: m.answer + "\n\n⏳ *Traitement en cours par le robot...*" } : m));
 
     const interval = setInterval(async () => {
       attempts++;
-      if (attempts > 20) { // Timeout 1 minute (3s * 20)
+      if (attempts > 25) { // Timeout 1.25 minutes (3s * 25)
           clearInterval(interval);
-          setMessages(prev => prev.map(m => m.id === messageId ? { ...m, answer: m.answer + "\n\n⚠️ *Le délai d'attente est dépassé. Veuillez vérifier le statut sur votre espace client.*" } : m));
+          setMessages(prev => prev.map(m => m.id === messageId ? { ...m, answer: m.answer + "\n\n⚠️ **Délai d'attente dépassé**\n\nL'automate prend plus de temps que prévu. Veuillez vérifier le statut de votre opération directement dans votre Espace Client Bancaire." } : m));
           return;
       }
 
       try {
         const statusData = await getJobStatus(jobKey);
-        // On suppose que statusData contient une liste 'value' dont le premier élément a 'State'
+        consecutiveErrors = 0; // Réinitialiser en cas de succès réseau
+        
         const job = statusData.value?.[0];
         const state = job?.State;
 
@@ -130,17 +131,26 @@ export default function Chat() {
           clearInterval(interval);
           setMessages(prev => prev.map(m => m.id === messageId ? { 
             ...m, 
-            answer: "✅ L'opération a été effectuée avec succès par le robot RPA !"
+            answer: "✅ **Opération effectuée avec succès !**\n\nLe robot RPA a terminé le traitement bancaire avec succès dans la fenêtre séparée. Votre solde et vos comptes ont été mis à jour."
           } : m));
         } else if (state === 'Faulted' || state === 'Canceled') {
           clearInterval(interval);
           setMessages(prev => prev.map(m => m.id === messageId ? { 
             ...m, 
-            answer: "❌ **Échec de l'Automate**\n\nLe robot a rencontré une erreur lors de l'exécution (State: " + state + "). Veuillez réessayer ou contacter le support technique." 
+            answer: "❌ **Échec technique de l'automate (RPA)**\n\nLe robot a rencontré une anomalie d'exécution sur le portail client (Statut : " + state + "). L'opération a été interrompue en toute sécurité.\n\n*Conseil : Veuillez vérifier le statut de votre compte ou réessayer plus tard.*" 
           } : m));
         }
       } catch (e) {
         console.error("Polling error:", e);
+        consecutiveErrors++;
+        
+        if (consecutiveErrors >= 3) {
+          clearInterval(interval);
+          setMessages(prev => prev.map(m => m.id === messageId ? { 
+            ...m, 
+            answer: "⚠️ **Erreur de liaison technique**\n\nLe chatbot a perdu la connexion avec le serveur de l'application ou le portail client. Impossible de suivre l'avancement du robot.\n\n*Veuillez vérifier que le serveur backend Java (port 8081) est bien actif.*" 
+          } : m));
+        }
       }
     }, 3000);
   };

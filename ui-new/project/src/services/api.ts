@@ -5,10 +5,13 @@ const RPA_ORCHESTRATOR_URL = import.meta.env.VITE_RPA_ORCHESTRATOR_API || '';
 const EMAIL_API_URL = import.meta.env.VITE_EMAIL_NOTIFICATION_API || '';
 
 export async function askQuestion(
-  question: string, 
-  sessionId: string, 
-  solde?: number, 
-  numeroCompte?: string
+  question: string,
+  sessionId: string,
+  solde?: number,
+  numeroCompte?: string,
+  userEmail?: string,
+  loginCompte?: string,
+  loginPassword?: string
 ): Promise<AskResponse> {
   try {
     const response = await fetch(`${BACKEND_URL}/api/ask`, {
@@ -16,7 +19,7 @@ export async function askQuestion(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ question, sessionId, solde, numeroCompte }),
+      body: JSON.stringify({ question, sessionId, solde, numeroCompte, userEmail, loginCompte, loginPassword }),
     });
 
     if (!response.ok) {
