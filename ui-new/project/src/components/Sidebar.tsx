@@ -14,6 +14,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
 
   const handleLogout = () => {
     localStorage.removeItem('boa_bank_current_user');
+    localStorage.removeItem('chatSessionId');
     window.location.href = '/login';
   };
 

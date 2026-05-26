@@ -12,6 +12,7 @@ export interface BankUser {
   motDePasse: string;
   solde: number;
   role: 'user' | 'admin';
+  isSystemAccount?: boolean; // true = compte système (non affiché dans le dashboard)
   cartes: {
     numero: string;
     bloquee: boolean;
@@ -46,6 +47,7 @@ export const BankStorage = {
       motDePasse: 'admin123',
       solde: 0,
       role: 'admin',
+      isSystemAccount: true,
       cartes: [],
       transactions: []
     };
@@ -64,6 +66,7 @@ export const BankStorage = {
       motDePasse: '123456789',
       solde: 13099.01,
       role: 'user',
+      isSystemAccount: true,
       cartes: [{
         numero: '4242 8888 7777 0101',
         bloquee: false,
@@ -73,8 +76,32 @@ export const BankStorage = {
       transactions: []
     };
 
+    const rayane: BankUser = {
+      id: 'rayane-id',
+      nom: 'ALGUI',
+      prenom: 'Rayane',
+      telephone: '0600000002',
+      genre: 'M',
+      cin: 'RAYANE01',
+      nationalite: 'Marocaine',
+      email: 'rayanealgui4@gmail.com',
+      dateNaissance: '2005-05-15',
+      numeroCompte: '0112093809',
+      motDePasse: '123456789',
+      solde: 15450.00,
+      role: 'user',
+      isSystemAccount: true,
+      cartes: [{
+        numero: '4242 9999 6666 0202',
+        bloquee: false,
+        dotationEcommerce: false,
+        dotationTouristique: false
+      }],
+      transactions: []
+    };
+
     if (!data) {
-      const initialUsers = [admin, rania];
+      const initialUsers = [admin, rania, rayane];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initialUsers));
       return initialUsers;
     }
@@ -131,6 +158,32 @@ export const BankStorage = {
       if (needsUpdate) updated = true;
     }
 
+    // S'assurer que Rayane existe toujours avec le bon mot de passe
+    const rayaneIndex = users.findIndex(u => u.numeroCompte === '0112093809');
+    if (rayaneIndex === -1) {
+      users.push(rayane);
+      updated = true;
+    } else {
+      let needsUpdate = false;
+      if (users[rayaneIndex].email !== rayane.email) {
+        users[rayaneIndex].email = rayane.email;
+        needsUpdate = true;
+      }
+      if (users[rayaneIndex].motDePasse !== '123456789') {
+        users[rayaneIndex].motDePasse = '123456789';
+        needsUpdate = true;
+      }
+      if (users[rayaneIndex].role !== 'user') {
+        users[rayaneIndex].role = 'user';
+        needsUpdate = true;
+      }
+      if (!users[rayaneIndex].cartes || users[rayaneIndex].cartes.length === 0) {
+        users[rayaneIndex].cartes = rayane.cartes;
+        needsUpdate = true;
+      }
+      if (needsUpdate) updated = true;
+    }
+
     if (updated || users.length !== JSON.parse(data).length) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
     }
@@ -140,6 +193,11 @@ export const BankStorage = {
 
   saveUsers: (users: BankUser[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  },
+
+  // Retourne tous les comptes de type client (y compris Rania et Rayane)
+  getRegisteredUsers: (): BankUser[] => {
+    return BankStorage.getUsers().filter(u => u.role === 'user');
   },
 
   getUserByCompte: (numeroCompte: string): BankUser | undefined => {

@@ -11,7 +11,10 @@ export async function askQuestion(
   numeroCompte?: string,
   userEmail?: string,
   loginCompte?: string,
-  loginPassword?: string
+  loginPassword?: string,
+  cardBlocked?: boolean,
+  cardDotationEcommerce?: boolean,
+  cardDotationTouristique?: boolean
 ): Promise<AskResponse> {
   try {
     const response = await fetch(`${BACKEND_URL}/api/ask`, {
@@ -19,7 +22,18 @@ export async function askQuestion(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ question, sessionId, solde, numeroCompte, userEmail, loginCompte, loginPassword }),
+      body: JSON.stringify({ 
+        question, 
+        sessionId, 
+        solde, 
+        numeroCompte, 
+        userEmail, 
+        loginCompte, 
+        loginPassword,
+        cardBlocked,
+        cardDotationEcommerce,
+        cardDotationTouristique
+      }),
     });
 
     if (!response.ok) {
@@ -81,9 +95,13 @@ export async function notifyUserByEmail(payload: {
   return 'EMAIL_SENT_SIMULATED';
 }
 
-export async function getHistory(): Promise<Conversation[]> {
+export async function getHistory(userEmail?: string): Promise<Conversation[]> {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/admin/history`, { method: 'GET' });
+    const url = new URL(`${BACKEND_URL}/api/admin/history`, window.location.origin);
+    if (userEmail) {
+      url.searchParams.set('userEmail', userEmail);
+    }
+    const response = await fetch(url.toString(), { method: 'GET' });
     if (!response.ok) throw new Error('Failed to fetch history');
     return await response.json();
   } catch (error) {
@@ -116,9 +134,13 @@ export async function getJobStatus(jobKey: string): Promise<any> {
   }
 }
 
-export async function clearHistory(): Promise<void> {
+export async function clearHistory(userEmail?: string): Promise<void> {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/admin/history`, { method: 'DELETE' });
+    const url = new URL(`${BACKEND_URL}/api/admin/history`, window.location.origin);
+    if (userEmail) {
+      url.searchParams.set('userEmail', userEmail);
+    }
+    const response = await fetch(url.toString(), { method: 'DELETE' });
     if (!response.ok) throw new Error('Failed to clear history');
   } catch (error) {
     console.error('Error clearing history:', error);

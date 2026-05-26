@@ -24,13 +24,23 @@ public class AdminController {
     }
 
     @GetMapping("/history")
-    public Object history(@RequestParam(value = "sessionId", required = false) String sessionId) {
+    public Object history(
+        @RequestParam(value = "sessionId", required = false) String sessionId,
+        @RequestParam(value = "userEmail", required = false) String userEmail
+    ) {
+        if (userEmail != null && !userEmail.isBlank()) {
+            return history.getAllByUserEmail(userEmail);
+        }
         return history.getAllBySessionId(sessionId);
     }
 
     @DeleteMapping("/history")
-    public void clear() {
-        history.clear();
+    public void clear(@RequestParam(value = "userEmail", required = false) String userEmail) {
+        if (userEmail != null && !userEmail.isBlank()) {
+            history.clearByUserEmail(userEmail);
+        } else {
+            history.clear();
+        }
     }
 }
 

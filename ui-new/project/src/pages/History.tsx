@@ -8,18 +8,25 @@ export default function History({ onBackToChat }: { onBackToChat: () => void }) 
   const [isLoading, setIsLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
 
+  const userStr = localStorage.getItem('boa_bank_current_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+
   useEffect(() => { loadHistory(); }, []);
 
   const loadHistory = async () => {
     setIsLoading(true);
-    try { setConversations(await getHistory()); }
+    try {
+      const userEmail = user?.role === 'admin' ? undefined : user?.email;
+      setConversations(await getHistory(userEmail));
+    }
     catch { /* silent */ }
     finally { setIsLoading(false); }
   };
 
   const handleClear = async () => {
-    if (!conversations.length || !confirm("Vider tout l'historique ?")) return;
-    await clearHistory();
+    if (!conversations.length || !confirm("Vider l'historique ?")) return;
+    const userEmail = user?.role === 'admin' ? undefined : user?.email;
+    await clearHistory(userEmail);
     setConversations([]);
   };
 

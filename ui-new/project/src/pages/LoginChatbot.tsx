@@ -46,6 +46,7 @@ export default function LoginChatbot() {
         
         if (admin && admin.motDePasse === trimmedPassword) {
           localStorage.setItem('boa_bank_current_user', JSON.stringify(admin));
+          localStorage.removeItem('chatSessionId');
           window.location.href = '/'; // Redirige vers App.tsx qui gère le dashboard admin
         } else {
           setError("Identifiants administrateur incorrects.");
@@ -58,6 +59,7 @@ export default function LoginChatbot() {
           
           if (user && user.motDePasse === trimmedPassword && user.role === 'user') {
             localStorage.setItem('boa_bank_current_user', JSON.stringify(user));
+            localStorage.removeItem('chatSessionId');
             window.location.href = '/';
           } else {
             setError("Numéro de compte ou mot de passe incorrect.");
@@ -76,6 +78,7 @@ export default function LoginChatbot() {
             motDePasse: password
           });
           localStorage.setItem('boa_bank_current_user', JSON.stringify(newUser));
+          localStorage.removeItem('chatSessionId');
           window.location.href = '/';
         }
       }

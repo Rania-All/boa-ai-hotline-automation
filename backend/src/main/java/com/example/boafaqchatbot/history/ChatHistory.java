@@ -33,6 +33,9 @@ public class ChatHistory {
     @Column(length = 64)
     private String source;
 
+    @Column(name = "user_email", length = 128)
+    private String userEmail;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -40,18 +43,23 @@ public class ChatHistory {
         // for JPA
     }
 
-    public ChatHistory(String q, String a, double c, String sessionId, String source) {
+    public ChatHistory(String q, String a, double c, String sessionId, String source, String userEmail) {
         this.id = UUID.randomUUID().toString();
         this.question = q;
         this.answer = a;
         this.confidence = c;
         this.sessionId = sessionId;
         this.source = source;
+        this.userEmail = userEmail;
         this.createdAt = OffsetDateTime.now();
     }
 
+    public ChatHistory(String q, String a, double c, String sessionId, String source) {
+        this(q, a, c, sessionId, source, null);
+    }
+
     public ChatHistory(String q, String a, double c, String sessionId) {
-        this(q, a, c, sessionId, null);
+        this(q, a, c, sessionId, null, null);
     }
 
     public String getId() { return id; }
@@ -70,5 +78,8 @@ public class ChatHistory {
 
     @JsonProperty("session_id")
     public String getSessionId() { return sessionId; }
+
+    @JsonProperty("user_email")
+    public String getUserEmail() { return userEmail; }
 }
 

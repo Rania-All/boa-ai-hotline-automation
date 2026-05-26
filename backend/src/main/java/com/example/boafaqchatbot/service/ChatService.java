@@ -35,7 +35,7 @@ public class ChatService {
         this.ollama = ollama;
     }
 
-    public ChatResponse reply(String message, String sessionId, Double solde, String numeroCompte, String userEmail) {
+    public ChatResponse reply(String message, String sessionId, Double solde, String numeroCompte, String userEmail, String loginCompte, String loginPassword, Boolean cardBlocked, Boolean cardDotationEcommerce, Boolean cardDotationTouristique) {
         System.out.println("\n>>> DEBUG: Message reçu du site : [" + message + "]");
         message = message == null ? "" : message.trim();
         if (message.isEmpty()) {
@@ -49,18 +49,30 @@ public class ChatService {
         ChatResponse response;
 
         if (intent == Intent.VIREMENT) {
-            response = triggerRpa(message, "VIREMENT", solde, numeroCompte, userEmail);
+            response = triggerRpa(message, "VIREMENT", solde, numeroCompte, userEmail, loginCompte, loginPassword);
         } else if (intent == Intent.CARD_UNBLOCK) {
-            response = triggerCardRpa("CARD_UNBLOCK", "déblocage de carte", userEmail);
+            if (cardBlocked != null && !cardBlocked) {
+                response = new ChatResponse("carte déjà débloquée", 1.0, "RPA_ALREADY_ACTIVE", List.of("Retour"));
+            } else {
+                response = triggerCardRpa("CARD_UNBLOCK", "déblocage de carte", userEmail, loginCompte, loginPassword);
+            }
         } else if (intent == Intent.DOTATION_ECOMMERCE) {
-            response = triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce", userEmail);
+            if (cardDotationEcommerce != null && cardDotationEcommerce) {
+                response = new ChatResponse("dotation e-commerce déjà active", 1.0, "RPA_ALREADY_ACTIVE", List.of("Retour"));
+            } else {
+                response = triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce", userEmail, loginCompte, loginPassword);
+            }
         } else if (intent == Intent.DOTATION_TOURISTIQUE) {
-            response = triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique", userEmail);
+            if (cardDotationTouristique != null && cardDotationTouristique) {
+                response = new ChatResponse("dotation touristique déjà active", 1.0, "RPA_ALREADY_ACTIVE", List.of("Retour"));
+            } else {
+                response = triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique", userEmail, loginCompte, loginPassword);
+            }
         } else {
             // 2) FAQ Sémantique
             ChatResponse faqResponse = similarityEngine(message);
             if (faqResponse.confidence() >= 0.60) {
-                history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId, faqResponse.source());
+                history.save(message, faqResponse.answer(), faqResponse.confidence(), sessionId, faqResponse.source(), userEmail);
                 return faqResponse;
             }
 
@@ -70,20 +82,20 @@ public class ChatService {
                     quick("Vous pouvez consulter votre solde via BOA Mobile, le portail web ou en agence.");
                 case OUVERTURE_COMPTE ->
                     quick("Pour ouvrir un compte, munissez-vous de votre CIN et justificatif de domicile.");
-                case VIREMENT -> triggerRpa(message, "VIREMENT", solde, numeroCompte, userEmail);
-                case CARD_UNBLOCK -> triggerCardRpa("CARD_UNBLOCK", "déblocage de carte", userEmail);
-                case DOTATION_ECOMMERCE -> triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce", userEmail);
-                case DOTATION_TOURISTIQUE -> triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique", userEmail);
+                case VIREMENT -> triggerRpa(message, "VIREMENT", solde, numeroCompte, userEmail, loginCompte, loginPassword);
+                case CARD_UNBLOCK -> (cardBlocked != null && !cardBlocked) ? new ChatResponse("carte déjà débloquée", 1.0, "RPA_ALREADY_ACTIVE", List.of("Retour")) : triggerCardRpa("CARD_UNBLOCK", "déblocage de carte", userEmail, loginCompte, loginPassword);
+                case DOTATION_ECOMMERCE -> (cardDotationEcommerce != null && cardDotationEcommerce) ? new ChatResponse("dotation e-commerce déjà active", 1.0, "RPA_ALREADY_ACTIVE", List.of("Retour")) : triggerCardRpa("DOTATION_ECOMMERCE", "activation dotation e-commerce", userEmail, loginCompte, loginPassword);
+                case DOTATION_TOURISTIQUE -> (cardDotationTouristique != null && cardDotationTouristique) ? new ChatResponse("dotation touristique déjà active", 1.0, "RPA_ALREADY_ACTIVE", List.of("Retour")) : triggerCardRpa("DOTATION_TOURISTIQUE", "activation dotation touristique", userEmail, loginCompte, loginPassword);
                 case CARTE_BANCAIRE -> quick("Les cartes bancaires BOA sont disponibles sous 5 jours ouvrables.");
                 case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
                 case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d'un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
-                case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA", solde, numeroCompte, userEmail);
+                case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA", solde, numeroCompte, userEmail, loginCompte, loginPassword);
                 default -> quick("Je n'ai pas compris votre question.");
             };
         }
 
         // Enregistrement dans l'historique pour TOUS les cas (RPA, erreurs logiques, NLP...)
-        history.save(message, response.answer(), response.confidence(), sessionId, response.source());
+        history.save(message, response.answer(), response.confidence(), sessionId, response.source(), userEmail);
         return response;
     }
 
@@ -98,7 +110,7 @@ public class ChatService {
         return new ChatResponse(llm, 0.55, "OLLAMA_RAG", List.of());
     }
 
-    private ChatResponse triggerRpa(String message, String action, Double solde, String numeroCompte, String userEmail) {
+    private ChatResponse triggerRpa(String message, String action, Double solde, String numeroCompte, String userEmail, String loginCompte, String loginPassword) {
         // Extraction intelligente des paramètres via Ollama
         String prompt = "Extrait le montant (chiffre), le nom du bénéficiaire et le numéro de compte de cette phrase: \"" + message + 
                        "\". Répond uniquement au format JSON: {\"montant\": \"...\", \"beneficiaire\": \"...\", \"compte\": \"...\",\"intentCode\": \"...\"}";
@@ -134,8 +146,10 @@ public class ChatService {
                 "in_Amount", montant,
                 "in_BeneficiaryName", beneficiaire,
                 "in_SourceAccount", compte,
-                "in_UserEmail", userEmail,
-                "in_Reason", "Virement via Chatbot"
+                "in_UserEmail", userEmail != null ? userEmail : "",
+                "in_Reason", "Virement via Chatbot",
+                "in_LoginCompte", loginCompte != null ? loginCompte : "",
+                "in_LoginPassword", loginPassword != null ? loginPassword : ""
         );
 
         // ── VERIFICATIONS FONCTIONNELLES & LOGIQUES ──
@@ -199,11 +213,13 @@ public class ChatService {
         return rpa.getJobStatus(jobKey);
     }
 
-    private ChatResponse triggerCardRpa(String intentCode, String actionLabel, String userEmail) {
+    private ChatResponse triggerCardRpa(String intentCode, String actionLabel, String userEmail, String loginCompte, String loginPassword) {
         // Pour les cartes, on envoie juste l'intention au robot
         Map<String, Object> uipathArgs = Map.of(
                 "in_IntentCode", intentCode,
-                "in_UserEmail", userEmail
+                "in_UserEmail", userEmail != null ? userEmail : "",
+                "in_LoginCompte", loginCompte != null ? loginCompte : "",
+                "in_LoginPassword", loginPassword != null ? loginPassword : ""
         );
 
         UiPathOrchestratorClient.StartJobResult started = rpa.startJob(uipathArgs);
@@ -269,7 +285,7 @@ public class ChatService {
             );
         }
 
-        return new ChatResponse(best.faq().answer(), best.score(), best.faq().question(), List.of());
+        return new ChatResponse(best.faq().answer(), best.score(), "FAQ", List.of());
     }
 
     private record ScoredMatch(FaqItem faq, double score) {}

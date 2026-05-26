@@ -23,6 +23,7 @@ const BankLayout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('boa_bank_current_user');
+    localStorage.removeItem('chatSessionId');
     navigate('/bank/login');
   };
 

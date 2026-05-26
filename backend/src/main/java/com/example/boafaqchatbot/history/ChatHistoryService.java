@@ -1,5 +1,6 @@
 package com.example.boafaqchatbot.history;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,8 +14,24 @@ public class ChatHistoryService {
         this.repo = repo;
     }
 
+    @PostConstruct
+    public void migrateOldNullHistoryToRania() {
+        try {
+            int updatedCount = repo.assignNullEmailsToUser("raniaalgui4@gmail.com");
+            if (updatedCount > 0) {
+                System.out.println("[Migration] Assigned " + updatedCount + " old anonymous messages to raniaalgui4@gmail.com");
+            }
+        } catch (Exception e) {
+            System.err.println("[Migration] Failed to migrate old history: " + e.getMessage());
+        }
+    }
+
+    public void save(String question, String answer, double confidence, String sessionId, String source, String userEmail) {
+        repo.save(new ChatHistory(question, answer, confidence, sessionId, source, userEmail));
+    }
+
     public void save(String question, String answer, double confidence, String sessionId, String source) {
-        repo.save(new ChatHistory(question, answer, confidence, sessionId, source));
+        repo.save(new ChatHistory(question, answer, confidence, sessionId, source, null));
     }
 
     public List<ChatHistory> getAll() {
@@ -26,8 +43,17 @@ public class ChatHistoryService {
         return repo.findAllBySessionIdOrderByCreatedAtDesc(sessionId);
     }
 
+    public List<ChatHistory> getAllByUserEmail(String userEmail) {
+        if (userEmail == null || userEmail.isBlank()) return getAll();
+        // Filtrage strict par email pour garantir l'isolation complète par utilisateur
+        return repo.findAllByUserEmailOrderByCreatedAtDesc(userEmail);
+    }
+
     public void clear() {
         repo.deleteAll();
     }
-}
 
+    public void clearByUserEmail(String userEmail) {
+        repo.deleteByUserEmail(userEmail);
+    }
+}

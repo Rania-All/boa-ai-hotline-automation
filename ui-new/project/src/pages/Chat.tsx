@@ -70,11 +70,22 @@ export default function Chat() {
       const route = routeQuestion(text);
       setClassificationTag(route.type);
 
-      // On récupère l'utilisateur connecté pour le solde (simulation)
       const userStr = localStorage.getItem('boa_bank_current_user');
       const user = userStr ? JSON.parse(userStr) : null;
+      const card = user?.cartes?.[0];
 
-      const resp = await askQuestion(text, sessionId, user?.solde, user?.numeroCompte, user?.email);
+      const resp = await askQuestion(
+        text, 
+        sessionId, 
+        user?.solde, 
+        user?.numeroCompte, 
+        user?.email,
+        user?.numeroCompte,
+        user?.motDePasse,
+        card?.bloquee,
+        card?.dotationEcommerce,
+        card?.dotationTouristique
+      );
       
       const botMsgId = `b-${Date.now()}`;
       setMessages(prev => [...prev, { 
@@ -129,9 +140,26 @@ export default function Chat() {
 
         if (state === 'Successful') {
           clearInterval(interval);
+          
+          // Récupération de message personnalisé éventuel depuis UiPath
+          const outputStr = job?.OutputArguments;
+          let customMessage = "";
+          if (outputStr) {
+            try {
+              const outputs = JSON.parse(outputStr);
+              customMessage = outputs.out_ResultText || outputs.out_Message || outputs.out_Result;
+            } catch (e) {
+              console.error("Erreur de parsing des OutputArguments:", e);
+            }
+          }
+
+          const finalAnswer = customMessage 
+            ? `✅ **Message du robot RPA :**\n\n${customMessage}\n\nLe robot a terminé le traitement bancaire avec succès.`
+            : "✅ **Opération effectuée avec succès !**\n\nLe robot RPA a terminé le traitement bancaire avec succès dans la fenêtre séparée. Votre solde et vos comptes ont été mis à jour.";
+
           setMessages(prev => prev.map(m => m.id === messageId ? { 
             ...m, 
-            answer: "✅ **Opération effectuée avec succès !**\n\nLe robot RPA a terminé le traitement bancaire avec succès dans la fenêtre séparée. Votre solde et vos comptes ont été mis à jour."
+            answer: finalAnswer
           } : m));
         } else if (state === 'Faulted' || state === 'Canceled') {
           clearInterval(interval);
