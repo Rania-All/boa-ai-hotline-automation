@@ -90,7 +90,7 @@ public class ChatService {
                 case FRAIS -> quick("Les frais varient selon le type de compte. Consultez la brochure tarifaire BOA.");
                 case TEG -> quick("Le taux annuel effectif global (TEG) est le coût total d'un crédit exprimé en pourcentage annuel et calculé selon les normes fixées par Bank Al Maghreb.");
                 case RPA_N1_RR -> triggerRpa(message, "GENERAL_RPA", solde, numeroCompte, userEmail, loginCompte, loginPassword);
-                default -> quick("Je n'ai pas compris votre question.");
+                default -> ollamaFallback(message);
             };
         }
 
@@ -101,13 +101,26 @@ public class ChatService {
 
 
     private ChatResponse ollamaFallback(String message) {
-        String llm = ollamaRag.answerWithFaqContext(message);
-        if (llm == null || llm.isBlank()) {
+        if (!ollama.isEnabled()) {
             return new ChatResponse(
-                    "Je n'ai pas compris votre demande. Pouvez-vous reformuler ?",
-                    0, null, List.of());
+                    "Le service d'assistance par IA (Ollama) est actuellement désactivé. Veuillez reformuler votre question ou contacter l'agence.",
+                    0, "FALLBACK_SERVICE_DISABLED", List.of("Retour"));
         }
-        return new ChatResponse(llm, 0.55, "OLLAMA_RAG", List.of());
+
+        try {
+            String llm = ollamaRag.answerWithFaqContext(message);
+            if (llm == null || llm.isBlank()) {
+                return new ChatResponse(
+                        "Désolé, le service d'assistance intelligente est temporairement indisponible. Veuillez réessayer ultérieurement.",
+                        0, "FALLBACK_SERVICE_ERROR", List.of("Retour"));
+            }
+            return new ChatResponse(llm, 0.55, "OLLAMA_RAG", List.of());
+        } catch (Exception e) {
+            System.err.println("❌ Error calling Ollama RAG fallback: " + e.getMessage());
+            return new ChatResponse(
+                    "Une erreur est survenue lors de la communication avec l'assistant virtuel. Veuillez réessayer plus tard.",
+                    0, "FALLBACK_SERVICE_ERROR", List.of("Retour"));
+        }
     }
 
     private ChatResponse triggerRpa(String message, String action, Double solde, String numeroCompte, String userEmail, String loginCompte, String loginPassword) {
@@ -241,38 +254,39 @@ public class ChatService {
         String normalizedMsg = TextNorm.norm(message).toLowerCase();
         double[] userEmbedding = ollama.embeddings(message);
         
-        List<ScoredMatch> matches = new ArrayList<>();
         String[] queryTokens = normalizedMsg.split("\\s+");
 
-        for (FaqItem f : store.all()) {
-            double semanticScore = 0;
-            if (userEmbedding != null && f.embedding() != null && f.embedding().length == userEmbedding.length) {
-                semanticScore = VectorMath.cosineSimilarity(userEmbedding, f.embedding());
-            }
-            
-            // Keyword Overlap Scoring
-            String faqQNorm = f.normQuestion().toLowerCase();
-            int matchedTokens = 0;
-            int validTokens = 0;
-            for (String qt : queryTokens) {
-                if (qt.length() > 2) { // Ignore short words
-                    validTokens++;
-                    if (faqQNorm.contains(qt)) {
-                        matchedTokens++;
+        List<ScoredMatch> matches = new ArrayList<>(store.all().parallelStream()
+            .map(f -> {
+                double semanticScore = 0;
+                if (userEmbedding != null && f.embedding() != null && f.embedding().length == userEmbedding.length) {
+                    semanticScore = VectorMath.cosineSimilarity(userEmbedding, f.embedding());
+                }
+                
+                // Keyword Overlap Scoring
+                String faqQNorm = f.normQuestion().toLowerCase();
+                int matchedTokens = 0;
+                int validTokens = 0;
+                for (String qt : queryTokens) {
+                    if (qt.length() > 2) { // Ignore short words
+                        validTokens++;
+                        if (faqQNorm.contains(qt)) {
+                            matchedTokens++;
+                        }
                     }
                 }
-            }
-            
-            double tokenScore = 0;
-            if (validTokens > 0) {
-                double overlapRatio = (double) matchedTokens / validTokens;
-                double lengthFactor = Math.min(1.0, 30.0 / Math.max(1, f.question().length()));
-                tokenScore = (overlapRatio * 0.8) + (lengthFactor * 0.2);
-            }
-            
-            double finalScore = Math.max(semanticScore, tokenScore);
-            matches.add(new ScoredMatch(f, finalScore));
-        }
+                
+                double tokenScore = 0;
+                if (validTokens > 0) {
+                    double overlapRatio = (double) matchedTokens / validTokens;
+                    double lengthFactor = Math.min(1.0, 30.0 / Math.max(1, f.question().length()));
+                    tokenScore = (overlapRatio * 0.8) + (lengthFactor * 0.2);
+                }
+                
+                double finalScore = Math.max(semanticScore, tokenScore);
+                return new ScoredMatch(f, finalScore);
+            })
+            .toList());
 
         matches.sort((a, b) -> Double.compare(b.score(), a.score()));
         

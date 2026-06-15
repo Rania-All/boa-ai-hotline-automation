@@ -16,7 +16,8 @@ public class OllamaClient {
     private final String model;
     private final String embeddingModel;
     private final boolean enabled;
-    private final Duration timeout;
+    private final Duration generateTimeout;
+    private final Duration embeddingTimeout;
 
     public OllamaClient(
             WebClient.Builder builder,
@@ -24,12 +25,17 @@ public class OllamaClient {
             @Value("${ollama.model:llama3.1}") String model,
             @Value("${ollama.embedding-model:nomic-embed-text}") String embeddingModel,
             @Value("${ollama.enabled:true}") boolean enabled,
-            @Value("${ollama.timeout-ms:30000}") long timeoutMs) {
+            @Value("${ollama.timeout-ms:15000}") long timeoutMs) {
         this.webClient = builder.baseUrl(baseUrl).build();
         this.model = model;
         this.embeddingModel = embeddingModel;
         this.enabled = enabled;
-        this.timeout = Duration.ofMillis(Math.max(1000, timeoutMs));
+        this.generateTimeout = Duration.ofMillis(Math.max(1000, timeoutMs));
+        this.embeddingTimeout = Duration.ofMillis(Math.min(3000, Math.max(1000, timeoutMs / 3)));
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public record GenerateResponse(String response) {}
@@ -50,7 +56,7 @@ public class OllamaClient {
                             "stream", false))
                     .retrieve()
                     .bodyToMono(GenerateResponse.class)
-                    .timeout(timeout)
+                    .timeout(generateTimeout)
                     .block();
 
             if (res == null || res.response() == null) return null;
@@ -77,7 +83,7 @@ public class OllamaClient {
                     ))
                     .retrieve()
                     .bodyToMono(EmbeddingResponse.class)
-                    .timeout(timeout)
+                    .timeout(embeddingTimeout)
                     .block();
 
             if (res != null && res.embeddings() != null && res.embeddings().length > 0) {

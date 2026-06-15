@@ -68,7 +68,16 @@ public class UiPathOrchestratorClient {
         String folderId = props.getFolderId();
 
         System.out.println("Envoi requête UiPath à : " + props.getBaseUrl());
-        System.out.println("Body : " + body);
+        
+        // Sécurisation des logs : masquage des identifiants sensibles
+        Map<String, Object> sanitizedArgs = new HashMap<>(inputArguments);
+        if (sanitizedArgs.containsKey("in_LoginPassword")) {
+            sanitizedArgs.put("in_LoginPassword", "*****");
+        }
+        Map<String, Object> sanitizedStartInfo = new HashMap<>(startInfo);
+        sanitizedStartInfo.put("InputArguments", JsonMini.stringify(sanitizedArgs));
+        Map<String, Object> sanitizedBody = Map.of("startInfo", sanitizedStartInfo);
+        System.out.println("Body : " + sanitizedBody);
 
         Map<?, ?> res;
         try {
