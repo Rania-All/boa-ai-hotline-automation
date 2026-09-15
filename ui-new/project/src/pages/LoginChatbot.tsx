@@ -21,6 +21,12 @@ export default function LoginChatbot() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
+  React.useEffect(() => {
+    // Si on arrive sur la page de login, on s'assure d'être déconnecté
+    localStorage.removeItem('boa_bank_current_user');
+    localStorage.removeItem('chatSessionId');
+  }, []);
+
   // Form states
   const [numeroCompte, setNumeroCompte] = useState('');
   const [password, setPassword] = useState('');
@@ -47,7 +53,7 @@ export default function LoginChatbot() {
         if (admin && admin.motDePasse === trimmedPassword) {
           localStorage.setItem('boa_bank_current_user', JSON.stringify(admin));
           localStorage.removeItem('chatSessionId');
-          window.location.href = '/'; // Redirige vers App.tsx qui gère le dashboard admin
+          window.location.href = '/chat'; // Redirige vers App.tsx qui gère le dashboard admin
         } else {
           setError("Identifiants administrateur incorrects.");
         }
@@ -60,7 +66,7 @@ export default function LoginChatbot() {
           if (user && user.motDePasse === trimmedPassword && user.role === 'user') {
             localStorage.setItem('boa_bank_current_user', JSON.stringify(user));
             localStorage.removeItem('chatSessionId');
-            window.location.href = '/';
+            window.location.href = '/chat';
           } else {
             setError("Numéro de compte ou mot de passe incorrect.");
           }
@@ -79,7 +85,7 @@ export default function LoginChatbot() {
           });
           localStorage.setItem('boa_bank_current_user', JSON.stringify(newUser));
           localStorage.removeItem('chatSessionId');
-          window.location.href = '/';
+          window.location.href = '/chat';
         }
       }
     } catch (err) {
@@ -90,150 +96,170 @@ export default function LoginChatbot() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050b18] flex items-center justify-center p-4 font-sans overflow-hidden relative">
-      {/* Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px]" />
+    <div className="h-screen flex items-center justify-center p-3 font-sans overflow-hidden relative" style={{background: 'linear-gradient(135deg, #00b5c8 0%, #009bae 40%, #007a8c 70%, #002f6c 100%)'}}>
+      {/* Background hexagon decorations like BOA mobile app */}
+      <div className="absolute top-[-5%] left-[-5%] w-[35%] h-[35%] opacity-20" style={{background: 'radial-gradient(circle, #ffffff 0%, transparent 70%)'}}>
+        <svg viewBox="0 0 200 200" className="w-full h-full opacity-30"><polygon points="100,10 190,55 190,145 100,190 10,145 10,55" fill="none" stroke="white" strokeWidth="2"/></svg>
+      </div>
+      <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] opacity-15" style={{background: 'radial-gradient(circle, #002f6c 0%, transparent 70%)'}}>
+        <svg viewBox="0 0 200 200" className="w-full h-full opacity-20"><polygon points="100,10 190,55 190,145 100,190 10,145 10,55" fill="none" stroke="#002f6c" strokeWidth="3"/></svg>
+      </div>
+      <div className="absolute top-[30%] right-[5%] w-[20%] h-[20%] opacity-10">
+        <svg viewBox="0 0 200 200" className="w-full h-full"><polygon points="100,10 190,55 190,145 100,190 10,145 10,55" fill="none" stroke="white" strokeWidth="2"/></svg>
+      </div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative z-10">
+      <div style={{
+        width:'100%', maxWidth:'1000px', minHeight:'500px',
+        display:'grid', gridTemplateColumns:'1fr 1fr',
+        borderRadius:'16px', overflow:'hidden',
+        background:'rgba(0,47,108,0.25)',
+        backdropFilter:'blur(20px)',
+        border:'1px solid rgba(255,255,255,0.2)',
+        boxShadow:'0 20px 60px rgba(0,0,0,0.4)',
+        position:'relative', zIndex:10
+      }}>
         
-        {/* Left Side: Visual/Branding */}
-        <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-blue-600/20 to-transparent border-r border-white/5">
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                <img src="/src/assets/boa-logo.png" alt="BOA" className="w-8" />
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">BANK OF AFRICA</span>
+        {/* Left Side */}
+        <div style={{
+          display:'flex', flexDirection:'column', justifyContent:'center',
+          padding:'40px',
+          background:'rgba(0,181,200,0.15)',
+          borderRight:'1px solid rgba(255,255,255,0.15)'
+        }}>
+          <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'16px'}}>
+            <div style={{width:'40px',height:'40px',background:'white',borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(0,0,0,0.2)'}}>
+              <img src="/src/assets/boa-logo.png" alt="BOA" style={{width:'28px'}} />
             </div>
-            <h1 className="text-5xl font-extrabold text-white leading-tight mb-6">
-              L'IA au service de votre <span className="text-blue-400">Liberté Financière.</span>
-            </h1>
-            <p className="text-gray-400 text-lg max-w-md">
-              Accédez à votre assistant intelligent pour gérer vos comptes, effectuer des virements RPA et surveiller vos transactions en toute sécurité.
-            </p>
+            <div>
+              <div style={{fontSize:'16px',fontWeight:800,color:'white',letterSpacing:'0.5px',lineHeight:1}}>BANK OF AFRICA</div>
+              <div style={{fontSize:'10px',color:'rgba(255,255,255,0.6)',letterSpacing:'2px',fontWeight:600,marginTop:'4px'}}>BMCE GROUP</div>
+            </div>
           </div>
-
-
+          <h1 style={{fontSize:'28px',fontWeight:900,color:'white',lineHeight:1.2,marginBottom:'16px'}}>
+            L'IA au service de votre{' '}
+            <span style={{color:'#002f6c',textShadow:'0 2px 12px rgba(0,47,108,0.5)'}}>Liberté Financière.</span>
+          </h1>
+          <p style={{fontSize:'14px',color:'rgba(255,255,255,0.85)',lineHeight:1.6}}>
+            Accédez à votre assistant intelligent pour gérer vos comptes, effectuer des virements RPA et surveiller vos transactions en toute sécurité.
+          </p>
         </div>
 
         {/* Right Side: Form */}
-        <div className="p-8 lg:p-12 flex flex-col">
+        <div style={{padding:'40px',display:'flex',flexDirection:'column',background:'rgba(0,181,200,0.08)'}}>
+          
           {/* Role Switcher */}
-          <div className="flex bg-white/5 p-1 rounded-2xl mb-8 border border-white/5 self-center">
+          <div style={{display:'flex',background:'rgba(255,255,255,0.1)',borderRadius:'12px',padding:'4px',marginBottom:'24px',alignSelf:'center',border:'1px solid rgba(255,255,255,0.2)'}}>
             <button 
               onClick={() => { setActiveTab('client'); setMode('login'); setError(''); }}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'client' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-gray-400 hover:text-white'}`}
+              style={{
+                display:'flex',alignItems:'center',gap:'8px',
+                padding:'8px 18px',borderRadius:'8px',fontSize:'14px',fontWeight:600,
+                background: activeTab==='client' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                color: activeTab==='client' ? 'white' : 'rgba(255,255,255,0.55)',
+                border:'none',cursor:'pointer',transition:'all 0.2s'
+              }}
             >
-              <User size={16} /> Accès Client
+              <User size={15} /> Accès Client
             </button>
             <button 
               onClick={() => { setActiveTab('admin'); setMode('login'); setError(''); }}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === 'admin' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'text-gray-400 hover:text-white'}`}
+              style={{
+                display:'flex',alignItems:'center',gap:'8px',
+                padding:'8px 18px',borderRadius:'8px',fontSize:'14px',fontWeight:600,
+                background: activeTab==='admin' ? '#002f6c' : 'transparent',
+                color: activeTab==='admin' ? 'white' : 'rgba(255,255,255,0.55)',
+                border:'none',cursor:'pointer',transition:'all 0.2s',
+                boxShadow: activeTab==='admin' ? '0 4px 12px rgba(0,47,108,0.5)' : 'none'
+              }}
             >
-              <Shield size={16} /> Superviseur
+              <Shield size={15} /> Superviseur
             </button>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">
-                {activeTab === 'admin' ? 'Espace Admin' : (mode === 'login' ? 'Espace Client' : 'Rejoignez-nous')}
-              </h2>
-              <p className="text-gray-400">
-                {activeTab === 'admin' 
-                  ? 'Accédez aux outils de surveillance et d\'analyse.' 
-                  : (mode === 'login' ? 'Entrez vos identifiants pour continuer.' : 'Créez votre profil client en quelques secondes.')}
-              </p>
+          {/* Form title */}
+          <div style={{marginBottom:'20px'}}>
+            <h2 style={{fontSize:'20px',fontWeight:700,color:'white',marginBottom:'6px'}}>
+              {activeTab === 'admin' ? 'Espace Admin' : (mode === 'login' ? 'Espace Client' : 'Rejoignez-nous')}
+            </h2>
+            <p style={{fontSize:'13px',color:'rgba(255,255,255,0.7)'}}>
+              {activeTab === 'admin'
+                ? "Accédez aux outils de surveillance et d'analyse."
+                : (mode === 'login' ? 'Entrez vos identifiants pour continuer.' : 'Créez votre profil client en quelques secondes.')}
+            </p>
+          </div>
+
+          <form onSubmit={handleAction} style={{display:'flex',flexDirection:'column',gap:'14px'}}>
+            {error && (
+              <div style={{padding:'10px 14px',borderRadius:'8px',color:'#fecaca',fontSize:'13px',display:'flex',alignItems:'center',gap:'8px',background:'rgba(239,68,68,0.2)',border:'1px solid rgba(239,68,68,0.4)'}}>
+                <AlertCircle size={16} /> {error}
+              </div>
+            )}
+
+            {mode === 'register' && activeTab === 'client' && (
+              <>
+                <div style={{position:'relative'}}>
+                  <User style={{position:'absolute',left:'14px',top:'50%',transform:'translateY(-50%)',color:'rgba(255,255,255,0.45)'}} size={16} />
+                  <input type="text" placeholder="Nom complet"
+                    style={{width:'100%',boxSizing:'border-box',background:'rgba(255,255,255,0.12)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:'10px',padding:'12px 14px 12px 38px',color:'white',fontSize:'14px',outline:'none'}}
+                    value={nom} onChange={e => setNom(e.target.value)} required
+                  />
+                </div>
+                <div style={{position:'relative'}}>
+                  <Sparkles style={{position:'absolute',left:'14px',top:'50%',transform:'translateY(-50%)',color:'rgba(255,255,255,0.45)'}} size={16} />
+                  <input type="email" placeholder="Adresse email"
+                    style={{width:'100%',boxSizing:'border-box',background:'rgba(255,255,255,0.12)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:'10px',padding:'12px 14px 12px 38px',color:'white',fontSize:'14px',outline:'none'}}
+                    value={email} onChange={e => setEmail(e.target.value)} required
+                  />
+                </div>
+              </>
+            )}
+
+            <div style={{position:'relative'}}>
+              <User style={{position:'absolute',left:'14px',top:'50%',transform:'translateY(-50%)',color:'rgba(255,255,255,0.45)'}} size={16} />
+              <input type="text" placeholder={activeTab === 'admin' ? 'ID Administrateur' : 'Numéro de Compte'}
+                style={{width:'100%',boxSizing:'border-box',background:'rgba(255,255,255,0.12)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:'10px',padding:'12px 14px 12px 38px',color:'white',fontSize:'14px',outline:'none'}}
+                value={numeroCompte} onChange={e => setNumeroCompte(e.target.value)} required
+              />
             </div>
 
-            <form className="space-y-4" onSubmit={handleAction}>
-              {error && (
-                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm flex items-center gap-2 animate-shake">
-                  <AlertCircle size={16} /> {error}
-                </div>
-              )}
+            <div style={{position:'relative'}}>
+              <Lock style={{position:'absolute',left:'14px',top:'50%',transform:'translateY(-50%)',color:'rgba(255,255,255,0.45)'}} size={16} />
+              <input type="password" placeholder="Mot de passe"
+                style={{width:'100%',boxSizing:'border-box',background:'rgba(255,255,255,0.12)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:'10px',padding:'12px 14px 12px 38px',color:'white',fontSize:'14px',outline:'none'}}
+                value={password} onChange={e => setPassword(e.target.value)} required
+              />
+            </div>
 
-              {mode === 'register' && activeTab === 'client' && (
-                <div className="space-y-4">
-                  <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={18} />
-                    <input 
-                      type="text" 
-                      placeholder="Nom complet" 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
-                      value={nom}
-                      onChange={e => setNom(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="relative group">
-                    <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={18} />
-                    <input 
-                      type="email" 
-                      placeholder="Adresse email" 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              )}
+            <button type="submit" disabled={loading} style={{
+              width:'100%',background:'#002f6c',color:'white',
+              border:'none',borderRadius:'10px',padding:'14px',marginTop:'4px',
+              fontSize:'15px',fontWeight:700,cursor:'pointer',
+              display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',
+              boxShadow:'0 4px 16px rgba(0,47,108,0.5)',
+              opacity: loading ? 0.7 : 1, transition:'all 0.2s'
+            }}>
+              {loading ? 'Traitement...' : (mode === 'login' ? 'Se connecter' : 'Créer un compte')}
+              <ArrowRight size={16} />
+            </button>
+          </form>
 
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={18} />
-                <input 
-                  type="text" 
-                  placeholder={activeTab === 'admin' ? "ID Administrateur" : "Numéro de Compte"} 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
-                  value={numeroCompte}
-                  onChange={e => setNumeroCompte(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" size={18} />
-                <input 
-                  type="password" 
-                  placeholder="Mot de passe" 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+          {/* Bottom link */}
+          <div style={{marginTop:'20px',textAlign:'center'}}>
+            {activeTab === 'client' && (
+              <button onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                style={{background:'none',border:'none',color:'rgba(255,255,255,0.55)',fontSize:'13px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',margin:'0 auto'}}
               >
-                {loading ? 'Traitement...' : (mode === 'login' ? 'Se connecter' : 'Créer un compte')}
-                <ArrowRight size={18} />
+                {mode === 'login'
+                  ? <><UserPlus size={15} /> Nouveau client ? Créer un compte</>
+                  : <><ChevronLeft size={15} /> Déjà client ? Se connecter</>
+                }
               </button>
-            </form>
-
-            <div className="mt-8 text-center">
-              {activeTab === 'client' && (
-                <button 
-                  onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                  className="text-gray-500 hover:text-white text-sm flex items-center justify-center gap-2 mx-auto transition-colors"
-                >
-                  {mode === 'login' ? (
-                    <> <UserPlus size={16} /> Nouveau client ? Créer un compte </>
-                  ) : (
-                    <> <ChevronLeft size={16} /> Déjà client ? Se connecter </>
-                  )}
-                </button>
-              )}
-              {activeTab === 'admin' && (
-                <div className="text-xs text-gray-600 max-w-[200px] mx-auto italic">
-                  Les accès administrateur sont restreints au personnel autorisé de Bank Of Africa.
-                </div>
-              )}
-            </div>
+            )}
+            {activeTab === 'admin' && (
+              <div style={{fontSize:'12px',color:'rgba(255,255,255,0.35)',fontStyle:'italic',maxWidth:'260px',margin:'0 auto'}}>
+                Les accès administrateur sont restreints au personnel autorisé de Bank Of Africa.
+              </div>
+            )}
           </div>
         </div>
       </div>

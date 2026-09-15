@@ -208,8 +208,8 @@ export default function AdminDashboard() {
 
   if (isLoading && !stats) {
     return (
-      <div className="flex items-center justify-center h-full text-white bg-[var(--bg-deep)]">
-        <RefreshCcw className="animate-spin mr-2" /> Chargement du dashboard...
+      <div className="flex items-center justify-center h-full text-[var(--text-secondary)] bg-[var(--bg-deep)]">
+        <RefreshCcw className="animate-spin mr-2 text-blue-500" /> Chargement du dashboard...
       </div>
     );
   }
@@ -223,33 +223,38 @@ export default function AdminDashboard() {
   const sources = stats?.sources ?? {};
   const top5 = stats?.top5 ?? [];
 
-  const faqCount = sources['FAQ'] ?? 0;
-  const rpaStartedCount = sources['RPA_STARTED'] ?? 0;
-  const ollamaCount = sources['OLLAMA_RAG'] ?? 0;
+  const faqCount = (sources['FAQ'] ?? 0) + (sources['NLP INTENT'] ?? 0);
+  const rpaTotalCount = Object.entries(sources)
+    .filter(([key]) => key.startsWith('RPA'))
+    .reduce((sum, [, count]) => sum + (count as number), 0);
+  const ollamaTotalCount = Object.entries(sources)
+    .filter(([key]) => key.startsWith('OLLAMA') || key.startsWith('FALLBACK'))
+    .reduce((sum, [, count]) => sum + (count as number), 0);
+  const autreCount = Math.max(0, total - faqCount - rpaTotalCount - ollamaTotalCount);
 
   return (
-    <div className="p-8 overflow-y-auto h-full space-y-8 bg-[var(--bg-deep)] text-white">
+    <div className="p-8 overflow-y-auto h-full space-y-8 bg-[var(--bg-deep)] text-[var(--text-primary)]">
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] flex items-center gap-3">
             <ShieldAlert className="text-red-500" /> Dashboard Superviseur
           </h1>
-          <p className="text-gray-400 mt-2">Surveillance du système et analyse de l'utilisation IA/RPA.</p>
+          <p className="text-[var(--text-muted)] mt-2">Surveillance du système et analyse de l'utilisation IA/RPA.</p>
         </div>
         <div className="flex gap-4">
           <button 
             onClick={fetchDashboardData}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors border border-gray-700"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-xl transition-colors border border-[var(--border)] shadow-sm font-medium text-sm"
           >
-            <RefreshCcw size={18} /> Actualiser
+            <RefreshCcw size={16} className="text-blue-500" /> Actualiser
           </button>
           <button 
             onClick={handleClearData}
             disabled={isClearing}
-            className="flex items-center gap-2 px-4 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded-lg transition-colors border border-red-900/50"
+            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-colors border border-red-500/30 text-sm font-medium"
           >
-            <Trash2 size={18} /> Nettoyer les données
+            <Trash2 size={16} /> Nettoyer les données
           </button>
         </div>
       </div>
@@ -284,39 +289,40 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Source Analysis */}
-        <div className="lg:col-span-1 bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
+        <div className="lg:col-span-1 bg-[var(--bg-card)]/50 p-6 rounded-2xl border border-[var(--border)]">
           <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
             <BarChart3 size={20} className="text-blue-400" /> Analyse des Sources
           </h3>
           {total === 0 ? (
-            <div className="text-center text-gray-500 py-8 text-sm">Aucune interaction enregistrée.</div>
+            <div className="text-center text-[var(--text-muted)] py-8 text-sm">Aucune interaction enregistrée.</div>
           ) : (
             <div className="space-y-6">
-              <SourceMetric label="FAQ & IA" count={faqCount} total={total} color="bg-blue-500" />
-              <SourceMetric label="RPA Automatisé" count={rpaStartedCount} total={total} color="bg-purple-500" />
-              <SourceMetric label="Ollama RAG" count={ollamaCount} total={total} color="bg-amber-500" />
+              <SourceMetric label="FAQ & Règles (NLP)" count={faqCount} total={total} color="bg-blue-500" />
+              <SourceMetric label="Robot RPA (Succès & Erreurs)" count={rpaTotalCount} total={total} color="bg-purple-500" />
+              <SourceMetric label="Assistant IA (Ollama)" count={ollamaTotalCount} total={total} color="bg-amber-500" />
+              {autreCount > 0 && <SourceMetric label="Autres / Anciennes données" count={autreCount} total={total} color="bg-gray-500" />}
             </div>
           )}
         </div>
 
         {/* Top Questions */}
-        <div className="lg:col-span-2 bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
+        <div className="lg:col-span-2 bg-[var(--bg-card)]/50 p-6 rounded-2xl border border-[var(--border)]">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <TrendingUp size={20} className="text-emerald-400" /> Questions les plus fréquentes
           </h3>
           <div className="space-y-3">
             {top5.length === 0 ? (
-              <div className="text-center text-gray-500 py-8 text-sm">
+              <div className="text-center text-[var(--text-muted)] py-8 text-sm">
                 Aucune question enregistrée pour le moment.
               </div>
             ) : (
               top5.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-gray-800/40 rounded-xl hover:bg-gray-800/60 transition-colors">
+                <div key={idx} className="flex justify-between items-center p-3 bg-[var(--bg-hover)]/40 rounded-xl hover:bg-[var(--bg-hover)]/60 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xs font-bold text-gray-500 w-4 shrink-0">#{idx + 1}</span>
+                    <span className="text-xs font-bold text-[var(--text-muted)] w-4 shrink-0">#{idx + 1}</span>
                     <span className="text-sm truncate">{item[0]}</span>
                   </div>
-                  <span className="px-3 py-1 bg-gray-700 text-xs rounded-full font-mono ml-3 shrink-0">{item[1]}x</span>
+                  <span className="px-3 py-1 bg-[var(--bg-hover)] text-[var(--text-secondary)] text-xs rounded-full font-mono ml-3 shrink-0 border border-[var(--border)]">{item[1]}x</span>
                 </div>
               ))
             )}
@@ -326,38 +332,38 @@ export default function AdminDashboard() {
 
       {/* RPA Summary Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-900/50 p-5 rounded-2xl border border-gray-800 flex items-center gap-4">
+        <div className="bg-[var(--bg-card)]/50 p-5 rounded-2xl border border-[var(--border)] flex items-center gap-4">
           <div className="p-3 bg-purple-500/20 rounded-xl">
             <Bot className="text-purple-400" size={24} />
           </div>
           <div>
             <div className="text-2xl font-bold">{rpaCount}</div>
-            <div className="text-sm text-gray-400">Jobs RPA déclenchés</div>
+            <div className="text-sm text-[var(--text-secondary)]">Jobs RPA déclenchés</div>
           </div>
         </div>
-        <div className="bg-gray-900/50 p-5 rounded-2xl border border-gray-800 flex items-center gap-4">
+        <div className="bg-[var(--bg-card)]/50 p-5 rounded-2xl border border-[var(--border)] flex items-center gap-4">
           <div className="p-3 bg-emerald-500/20 rounded-xl">
             <UserCheck className="text-emerald-400" size={24} />
           </div>
           <div>
             <div className="text-2xl font-bold">{usersList.length}</div>
-            <div className="text-sm text-gray-400">Comptes Clients Actifs</div>
+            <div className="text-sm text-[var(--text-secondary)]">Comptes Clients Actifs</div>
           </div>
         </div>
-        <div className="bg-gray-900/50 p-5 rounded-2xl border border-gray-800 flex items-center gap-4">
+        <div className="bg-[var(--bg-card)]/50 p-5 rounded-2xl border border-[var(--border)] flex items-center gap-4">
           <div className="p-3 bg-amber-500/20 rounded-xl">
             <BarChart3 className="text-amber-400" size={24} />
           </div>
           <div>
-            <div className="text-2xl font-bold">{ollamaCount}</div>
-            <div className="text-sm text-gray-400">Réponses via RAG Ollama</div>
+            <div className="text-2xl font-bold">{ollamaTotalCount}</div>
+            <div className="text-sm text-[var(--text-secondary)]">Réponses via RAG Ollama</div>
           </div>
         </div>
       </div>
 
       {/* Users Management */}
-      <div className="bg-gray-900/50 rounded-2xl border border-gray-800 overflow-hidden">
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+      <div className="bg-[var(--bg-card)]/50 rounded-2xl border border-[var(--border)] overflow-hidden">
+        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Users size={20} className="text-purple-400" /> Comptes Créés par les Clients
           </h3>
@@ -376,7 +382,7 @@ export default function AdminDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-800/50 text-gray-400 text-xs uppercase tracking-wider">
+              <tr className="bg-[var(--bg-hover)]/50 text-[var(--text-secondary)] text-xs uppercase tracking-wider">
                 <th className="px-6 py-4 font-medium">Nom / Email</th>
                 <th className="px-6 py-4 font-medium">N° Compte</th>
                 <th className="px-6 py-4 font-medium">Rôle</th>
@@ -385,23 +391,23 @@ export default function AdminDashboard() {
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-[var(--border)]">
               {usersList.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 text-sm">
+                  <td colSpan={6} className="px-6 py-12 text-center text-[var(--text-muted)] text-sm">
                     Aucun compte client créé pour le moment.
                   </td>
                 </tr>
               ) : (
                 usersList.map((user: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-gray-800/30 transition-colors">
+                  <tr key={idx} className="hover:bg-[var(--bg-hover)]/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">{user.nom} {user.prenom}</span>
-                        <span className="text-xs text-gray-500">{user.email}</span>
+                        <span className="text-sm font-bold text-[var(--text-primary)]">{user.nom} {user.prenom}</span>
+                        <span className="text-xs text-[var(--text-muted)]">{user.email}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-xs font-mono text-gray-400">{user.numeroCompte}</td>
+                    <td className="px-6 py-4 text-xs font-mono text-[var(--text-secondary)]">{user.numeroCompte}</td>
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         {user.role}
@@ -410,7 +416,7 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4">
                       <span className="text-sm font-bold text-emerald-400">{user.solde?.toLocaleString('fr-MA')} MAD</span>
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-500">
+                    <td className="px-6 py-4 text-xs text-[var(--text-muted)]">
                       {user.dateNaissance}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -440,22 +446,22 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent History */}
-      <div className="bg-gray-900/50 rounded-2xl border border-gray-800 overflow-hidden">
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+      <div className="bg-[var(--bg-card)]/50 rounded-2xl border border-[var(--border)] overflow-hidden">
+        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Activity size={20} className="text-blue-400" /> Dernières Interactions Chatbot
           </h3>
-          <span className="text-xs text-gray-500">{history.length > 0 ? `${history.length} affichées` : 'Aucune'}</span>
+          <span className="text-xs text-[var(--text-muted)]">{history.length > 0 ? `${history.length} affichées` : 'Aucune'}</span>
         </div>
         {history.length === 0 ? (
-          <div className="text-center text-gray-500 py-12 text-sm">
+          <div className="text-center text-[var(--text-muted)] py-12 text-sm">
             Aucune interaction enregistrée dans la base de données.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-800/50 text-gray-400 text-xs uppercase tracking-wider">
+                <tr className="bg-[var(--bg-hover)]/50 text-[var(--text-secondary)] text-xs uppercase tracking-wider">
                   <th className="px-6 py-4 font-medium">Utilisateur</th>
                   <th className="px-6 py-4 font-medium">Question</th>
                   <th className="px-6 py-4 font-medium">Source</th>
@@ -463,17 +469,17 @@ export default function AdminDashboard() {
                   <th className="px-6 py-4 font-medium">Statut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-[var(--border)]">
                 {history.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-gray-800/30 transition-colors">
-                    <td className="px-6 py-4 text-xs text-gray-400">
+                  <tr key={idx} className="hover:bg-[var(--bg-hover)]/30 transition-colors">
+                    <td className="px-6 py-4 text-xs text-[var(--text-secondary)]">
                       {row.user_email ? (
                         <span className="font-mono">{row.user_email}</span>
                       ) : (
-                        <span className="text-gray-600 font-mono">...{row.session_id?.slice(-8)}</span>
+                        <span className="text-[var(--text-muted)] font-mono">...{row.session_id?.slice(-8)}</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm max-w-xs truncate">{row.question}</td>
+                    <td className="px-6 py-4 text-sm text-[var(--text-primary)] max-w-xs truncate">{row.question}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                         row.source === 'RPA_STARTED' ? 'bg-purple-500/20 text-purple-400' :
@@ -485,17 +491,17 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-12 bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                        <div className="w-12 bg-[var(--bg-hover)] h-1.5 rounded-full overflow-hidden">
                           <div 
                             className={`h-full ${row.confidence >= 0.7 ? 'bg-emerald-500' : 'bg-amber-500'}`}
                             style={{ width: `${row.confidence * 100}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-400">{(row.confidence * 100).toFixed(0)}%</span>
+                        <span className="text-xs text-[var(--text-secondary)]">{(row.confidence * 100).toFixed(0)}%</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="flex items-center gap-1 text-xs text-emerald-400">
+                      <span className="flex items-center gap-1 text-xs text-emerald-600 font-bold">
                         <CheckCircle2 size={12} /> Traité
                       </span>
                     </td>
@@ -509,17 +515,17 @@ export default function AdminDashboard() {
 
       {/* Elegant CRUD Modal Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fadeIn">
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-800/20">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Users className="text-purple-400" size={20} />
+            <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg-hover)]">
+              <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Users className="text-purple-500" size={20} />
                 {modalMode === 'add' ? 'Créer un Nouveau Compte Client' : 'Modifier les Informations du Client'}
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-[var(--text-secondary)] hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
@@ -529,131 +535,131 @@ export default function AdminDashboard() {
             <form onSubmit={handleSaveUser} className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Prénom</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Prénom</label>
                   <input 
                     type="text" 
                     required 
                     value={formPrenom} 
                     onChange={e => setFormPrenom(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="Prénom de l'utilisateur"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Nom</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Nom</label>
                   <input 
                     type="text" 
                     required 
                     value={formNom} 
                     onChange={e => setFormNom(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="NOM DE FAMILLE"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Email</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Email</label>
                   <input 
                     type="email" 
                     required 
                     value={formEmail} 
                     onChange={e => setFormEmail(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="client@mail.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Téléphone</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Téléphone</label>
                   <input 
                     type="text" 
                     required 
                     value={formTelephone} 
                     onChange={e => setFormTelephone(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="0600000000"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">N° de Compte Bancaire</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">N° de Compte Bancaire</label>
                   <input 
                     type="text" 
                     required 
                     value={formNumeroCompte} 
                     onChange={e => setFormNumeroCompte(e.target.value)} 
-                    className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-gray-400 font-mono focus:outline-none"
+                    className="w-full bg-[var(--bg-hover)]/50 border border-[var(--border-light)]/50 rounded-xl px-4 py-2.5 text-sm text-[var(--text-secondary)] font-mono focus:outline-none"
                     placeholder="N° Compte unique"
                     disabled={modalMode === 'edit'} // No changing account numbers after creation for system stability
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Mot de Passe de Connexion</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Mot de Passe de Connexion</label>
                   <input 
                     type="text" 
                     required 
                     value={formMotDePasse} 
                     onChange={e => setFormMotDePasse(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="motdepasse123"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">CIN</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">CIN</label>
                   <input 
                     type="text" 
                     required 
                     value={formCin} 
                     onChange={e => setFormCin(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="AB123456"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Solde Actuel (MAD)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Solde Actuel (MAD)</label>
                   <input 
                     type="number" 
                     required 
                     value={formSolde} 
                     onChange={e => setFormSolde(Number(e.target.value))} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="15000"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Nationalité</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Nationalité</label>
                   <input 
                     type="text" 
                     required 
                     value={formNationalite} 
                     onChange={e => setFormNationalite(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Date de Naissance</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Date de Naissance</label>
                   <input 
                     type="date" 
                     required 
                     value={formDateNaissance} 
                     onChange={e => setFormDateNaissance(e.target.value)} 
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Genre</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Genre</label>
                   <select 
                     value={formGenre} 
                     onChange={e => setFormGenre(e.target.value as 'M' | 'F')}
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 transition-all"
                   >
                     <option value="M">Masculin</option>
                     <option value="F">Féminin</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Rôle Système</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Rôle Système</label>
                   <select 
                     value={formRole} 
                     onChange={e => setFormRole(e.target.value as 'user' | 'admin')}
-                    className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-all"
+                    className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500 transition-all"
                   >
                     <option value="user">Utilisateur (Client)</option>
                     <option value="admin">Administrateur</option>
@@ -662,11 +668,11 @@ export default function AdminDashboard() {
               </div>
 
               {/* Modal Footer / Form Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-800 mt-6">
+              <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)] mt-6">
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm font-bold transition-all"
+                  className="px-4 py-2 bg-[var(--bg-hover)] hover:bg-[var(--border)] text-[var(--text-secondary)] rounded-xl text-sm font-bold transition-all"
                 >
                   Annuler
                 </button>
@@ -687,15 +693,15 @@ export default function AdminDashboard() {
 
 function StatCard({ title, value, icon, trend }: { title: string; value: string | number; icon: React.ReactNode; trend: string }) {
   return (
-    <div className="bg-gray-900/50 p-6 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all group">
+    <div className="bg-[var(--bg-card)]/50 p-6 rounded-2xl border border-[var(--border)] hover:border-[var(--border-light)] transition-all group">
       <div className="flex justify-between items-start mb-4">
-        <div className="p-3 bg-gray-800 rounded-xl group-hover:scale-110 transition-transform">
+        <div className="p-3 bg-[var(--bg-hover)] rounded-xl group-hover:scale-110 transition-transform">
           {icon}
         </div>
-        <span className="text-[10px] text-gray-500 uppercase tracking-widest text-right max-w-[100px]">{trend}</span>
+        <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest text-right max-w-[100px]">{trend}</span>
       </div>
       <div className="text-2xl font-bold">{value}</div>
-      <div className="text-sm text-gray-500 mt-1">{title}</div>
+      <div className="text-sm text-[var(--text-muted)] mt-1">{title}</div>
     </div>
   );
 }
@@ -705,16 +711,16 @@ function SourceMetric({ label, count, total, color }: { label: string; count: nu
   return (
     <div>
       <div className="flex justify-between text-sm mb-2">
-        <span className="text-gray-400">{label}</span>
+        <span className="text-[var(--text-secondary)]">{label}</span>
         <span className="font-mono">{percentage}%</span>
       </div>
-      <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+      <div className="w-full bg-[var(--bg-hover)] h-2 rounded-full overflow-hidden">
         <div 
           className={`h-full ${color} transition-all duration-1000`} 
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <div className="text-[10px] text-gray-500 mt-1">{count} interaction{count !== 1 ? 's' : ''}</div>
+      <div className="text-[10px] text-[var(--text-muted)] mt-1">{count} interaction{count !== 1 ? 's' : ''}</div>
     </div>
   );
 }

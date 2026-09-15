@@ -1,0 +1,30 @@
+﻿Issue Key (ID),Summary,Issue Type,Priority,Sprint,Epic Link/Name,Start Date,End Date,Description,Acceptance Criteria
+EPIC-01,Epic : Conception & Cadrage Technique,Epic,Must,Sprint 1,Epic : Conception & Cadrage Technique,16-02-2026,01-03-2026,"Phases initiales de cadrage, analyse et architecture.","- Doc d'architecture validé
+- Workspace de dev initialisé"
+EPIC-02,Epic : Moteur de Chatbot & FAQ Excel,Epic,Must,Sprint 2,Epic : Moteur de Chatbot & FAQ Excel,02-03-2026,15-03-2026,Ingestion et API de recherche basées sur la FAQ Excel.,"- Excel parsé avec succès
+- Recherche FAQ opérationnelle"
+EPIC-03,Epic : NLP & Classification RAG / IA,Epic,Must,Sprint 3,Epic : NLP & Classification RAG / IA,16-03-2026,29-03-2026,Classification intelligente IA et détection du périmètre N1-RR.,"- Taux de précision > 85%
+- Détection automatique RPA ok"
+EPIC-04,Epic : Interface React & Dashboard Admin,Epic,Must,Sprint 4,Epic : Interface React & Dashboard Admin,30-03-2026,12-04-2026,Développement de l'interface graphique utilisateur et administrateur.,"- Chat UI responsive
+- Page historique opérationnelle"
+EPIC-05,Epic : Intégration UiPath Orchestrator,Epic,Must,"Sprint 5, Sprint 6",Epic : Intégration UiPath Orchestrator,13-04-2026,10-05-2026,Connexion sécurisée API et déclenchement de jobs robotisés.,"- OAuth2 fonctionnel
+- Lancement robot via API Rest"
+EPIC-06,Epic : Sécurisation & Simulation Métier,Epic,Should,Sprint 7,Epic : Sécurisation & Simulation Métier,11-05-2026,24-05-2026,Formulaires de démo et masquage des données sensibles.,"- Simulation de virement
+- Pas de données sensibles en clair"
+EPIC-07,"Epic : Recette, Déploiement & Clôture",Epic,Must,"Sprint 8, Phase Finale","Epic : Recette, Déploiement & Clôture",25-05-2026,14-07-2026,"Tests de bout en bout, correctifs et rédaction de rapport PFE.","- Test end-to-end ok
+- Rapport final validé"
+US-01,Analyse des besoins de la hotline BOA,Story,Must,Sprint 1,Epic : Conception & Cadrage Technique,16-02-2026,22-02-2026,"En tant que développeuse, je veux analyser les besoins de la hotline afin de définir le périmètre fonctionnel.",Liste des processus N1-RR éligibles validée.
+US-02,Mise en place de l'architecture technique,Story,Must,Sprint 1,Epic : Conception & Cadrage Technique,23-02-2026,01-03-2026,"En tant que développeuse, je veux initialiser les projets Spring Boot et React afin de démarrer le développement.","Workspace Git configuré, compilation ok."
+US-03,Parser de base FAQ Excel,Story,Must,Sprint 2,Epic : Moteur de Chatbot & FAQ Excel,02-03-2026,08-03-2026,"En tant que conseiller, je veux que la base de données charge le fichier Excel pour l'exploiter en continu.",Fichier Excel parsé par Apache POI sans erreur.
+US-04,API de recherche FAQ par mot-clé,Story,Must,Sprint 2,Epic : Moteur de Chatbot & FAQ Excel,09-03-2026,15-03-2026,"En tant que conseiller, je veux rechercher une question par mot-clé afin d'avoir une réponse instantanée.",Temps de réponse < 500ms sur la recherche.
+US-05,Classification RAG / NLP intelligente,Story,Must,Sprint 3,Epic : NLP & Classification RAG / IA,16-03-2026,22-03-2026,"En tant que responsable, je veux classifier les questions pour répondre intelligemment via similarité sémantique.",Précision de classification > 85%.
+US-06,Détection automatique de demande RPA N1-RR,Story,Must,Sprint 3,Epic : NLP & Classification RAG / IA,23-03-2026,29-03-2026,"En tant que responsable support, je veux que l'IA détecte si la question doit être traitée par un robot.",Les cas N1-RR sont correctement flaggés pour exécution RPA.
+US-07,Interface graphique de Chat React,Story,Must,Sprint 4,Epic : Interface React & Dashboard Admin,30-03-2026,05-04-2026,"En tant qu'utilisateur, je veux interagir avec une interface de chat agréable pour poser mes questions.","Interface de chat responsive, bulles de messages fluides."
+US-08,Base SQL d'historique des conversations,Story,Must,Sprint 4,Epic : Interface React & Dashboard Admin,06-04-2026,12-04-2026,"En tant qu'administrateur, je veux sauvegarder les chats afin de garder une traçabilité des incidents.",Sessions de chat persistées en base PostgreSQL / H2.
+US-09,Authentification OAuth2 à l'Orchestrator Cloud,Story,Must,Sprint 5,Epic : Intégration UiPath Orchestrator,13-04-2026,26-04-2026,"En tant que développeuse, je veux gérer l'authentification OAuth2 pour appeler de façon sécurisée l'API UiPath.",Jeton bearer récupéré et rafraîchi avec client_id/secret.
+US-10,API de déclenchement de job RPA,Story,Must,Sprint 6,Epic : Intégration UiPath Orchestrator,27-04-2026,03-05-2026,"En tant que responsable, je veux lancer un robot UiPath à partir d'un appel API HTTP.",Statut 201 Created retourné avec la clé unique du job.
+US-11,Suivi de statut du robot en temps réel,Story,Must,Sprint 6,Epic : Intégration UiPath Orchestrator,04-05-2026,10-05-2026,"En tant qu'agent, je veux voir l'avancement du robot afin de suivre la résolution.",Polling backend fonctionnel avec statuts : In Progress / Success.
+US-12,Formulaires de simulation bancaire,Story,Should,Sprint 7,Epic : Sécurisation & Simulation Métier,11-05-2026,17-05-2026,"En tant que développeuse, je veux simuler des formulaires (virements, blocages) pour valider l'envoi au robot.","Validation de champs côté React, payload JSON envoyé au backend."
+US-13,Masquage et sécurité des données bancaires,Story,Must,Sprint 7,Epic : Sécurisation & Simulation Métier,18-05-2026,24-05-2026,"En tant que responsable sécurité, je veux masquer les cartes et identifiants dans les logs.",Masquage par regex dans les logs et la DB (ex: **** **** **** 1234).
+US-14,Tests d'intégration bout en bout,Story,Must,Sprint 8,"Epic : Recette, Déploiement & Clôture",25-05-2026,07-06-2026,"En tant que développeuse, je veux tester le flux complet (User ➔ Chatbot ➔ IA ➔ UiPath ➔ Client) pour corriger les bugs.",Parcours complet validé avec succès sans crash.
+US-15,Déploiement pilote & Rapport final PFE,Story,Must,Phase Finale,"Epic : Recette, Déploiement & Clôture",08-06-2026,14-07-2026,"En tant qu'étudiante, je veux déployer le pilote et rédiger mon rapport de PFE pour la soutenance.",Rapport PFE complet validé par les encadrants.

@@ -13,7 +13,7 @@ public class AdminController {
     private final StatsService stats;
     private final ChatHistoryService history;
 
-    public AdminController(StatsService stats, ChatHistoryService history) {
+    public AdminController(StatsService stats , ChatHistoryService history) {
         this.stats = stats;
         this.history = history;
     }

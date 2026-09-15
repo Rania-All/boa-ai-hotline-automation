@@ -1,5 +1,6 @@
 package com.example.boafaqchatbot.history;
 
+import com.example.boafaqchatbot.faq.FaqItem;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +27,20 @@ public class ChatHistoryService {
         }
     }
 
+    public void save(String question, String answer, double confidence, String sessionId, String source, String userEmail, FaqItem faqItem, String ticketType) {
+        repo.save(new ChatHistory(question, answer, confidence, sessionId, source, userEmail, faqItem, ticketType));
+    }
+
+    public void save(String question, String answer, double confidence, String sessionId, String source, String userEmail, FaqItem faqItem) {
+        save(question, answer, confidence, sessionId, source, userEmail, faqItem, null);
+    }
+
     public void save(String question, String answer, double confidence, String sessionId, String source, String userEmail) {
-        repo.save(new ChatHistory(question, answer, confidence, sessionId, source, userEmail));
+        save(question, answer, confidence, sessionId, source, userEmail, null, null);
     }
 
     public void save(String question, String answer, double confidence, String sessionId, String source) {
-        repo.save(new ChatHistory(question, answer, confidence, sessionId, source, null));
+        save(question, answer, confidence, sessionId, source, null, null, null);
     }
 
     public List<ChatHistory> getAll() {

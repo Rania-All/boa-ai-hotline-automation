@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { BankStorage, BankUser } from '../../utils/BankStorage';
 import { Send, CheckCircle, Smartphone, AlertCircle, Clock, Mail } from 'lucide-react';
 
-// EmailJS Configuration (To be filled by the user)
+// EmailJS Configuration
 const EMAILJS_SERVICE_ID = 'service_si4fhul';
 const EMAILJS_TEMPLATE_ID = 'template_my0666o';
 const EMAILJS_PUBLIC_KEY = 'Em0KkG5gc3kWRhUjQ';
+
+// L'adresse email que UiPath surveille pour récupérer le code OTP
+// Peu importe quel utilisateur fait le virement, une copie est toujours envoyée ici
+const ROBOT_MONITORED_EMAIL = 'raniaalgui4@gmail.com';
 
 const TransferPage = () => {
   const navigate = useNavigate();
@@ -45,6 +49,7 @@ const TransferPage = () => {
     }
 
     try {
+      // Envoyer à l'email de l'utilisateur connecté
       const data = {
         service_id: EMAILJS_SERVICE_ID,
         template_id: EMAILJS_TEMPLATE_ID,
@@ -58,13 +63,37 @@ const TransferPage = () => {
           receiver: destinataire
         }
       };
-
       await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      console.log('Email envoyé avec succès !');
+
+      // Si l'utilisateur connecté n'est pas la boîte surveillée par le robot,
+      // envoyer une copie à la boîte que UiPath surveille
+      if (targetEmail !== ROBOT_MONITORED_EMAIL) {
+        const dataRobot = {
+          service_id: EMAILJS_SERVICE_ID,
+          template_id: EMAILJS_TEMPLATE_ID,
+          user_id: EMAILJS_PUBLIC_KEY,
+          template_params: {
+            email: ROBOT_MONITORED_EMAIL,
+            passcode: otp,
+            time: validUntil,
+            message: msg,
+            amount: montant,
+            receiver: destinataire
+          }
+        };
+        await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dataRobot)
+        });
+        console.log('Copie robot envoyée à :', ROBOT_MONITORED_EMAIL);
+      }
+
+      console.log('Email(s) envoyé(s) avec succès !');
     } catch (error) {
       console.error('Erreur EmailJS:', error);
     }
@@ -117,7 +146,7 @@ const TransferPage = () => {
     e.preventDefault();
     setError('');
 
-    if (otpInput !== otpCode) {
+    if (otpInput.trim() !== otpCode) {
       setError('Code de confirmation incorrect');
       return;
     }

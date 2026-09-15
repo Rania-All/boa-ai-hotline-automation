@@ -12,6 +12,7 @@ public enum Intent {
     FRAIS,
     TEG,
     RPA_N1_RR,
+    GREETING,
     UNKNOWN
 }
 

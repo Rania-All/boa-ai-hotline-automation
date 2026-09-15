@@ -1,21 +1,49 @@
-import { MessageSquare, History, Building, Zap, BarChart3, Shield } from 'lucide-react';
+import { MessageSquare, History, Building, Zap, BarChart3, Shield, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSettings } from '../context/SettingsContext';
 
 interface SidebarProps {
-  currentPage: 'chat' | 'history' | 'admin';
-  onNavigate: (page: 'chat' | 'history' | 'admin') => void;
+  currentPage: 'chat' | 'history' | 'admin' | 'settings';
+  onNavigate: (page: 'chat' | 'history' | 'admin' | 'settings') => void;
 }
 
 export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const navigate = useNavigate();
+  const { t } = useSettings();
   const userStr = localStorage.getItem('boa_bank_current_user');
   const user = userStr ? JSON.parse(userStr) : null;
   const role = user?.role || 'guest';
 
+  const [precision, setPrecision] = useState<string>('--');
+  const [rpaCount, setRpaCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+        const res = await fetch(`${BACKEND_URL}/api/admin/stats`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.avgConfidence != null && data.total > 0) {
+            setPrecision(`${(data.avgConfidence * 100).toFixed(0)}%`);
+          } else {
+            setPrecision('N/A');
+          }
+          setRpaCount(data.rpaCount ?? 0);
+        }
+      } catch {
+        setPrecision('--');
+        setRpaCount(null);
+      }
+    };
+    fetchStats();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('boa_bank_current_user');
     localStorage.removeItem('chatSessionId');
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   return (
@@ -27,13 +55,12 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         </div>
         <div className="logo-text">
           <div className="logo-name">Bank Of Africa</div>
-
         </div>
       </div>
 
       {/* Nav */}
       <nav className="sidebar-nav">
-        <div className="nav-section-label">Navigation</div>
+        <div className="nav-section-label">{t("Navigation")}</div>
 
         {(role === 'user' || role === 'guest') && (
           <button
@@ -41,7 +68,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             className={`nav-item ${currentPage === 'chat' ? 'nav-active' : ''}`}
           >
             <MessageSquare size={18} />
-            <span>Session en cours</span>
+            <span>{t("Session en cours")}</span>
             {currentPage === 'chat' && <span className="nav-indicator" />}
           </button>
         )}
@@ -52,7 +79,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             className={`nav-item ${currentPage === 'history' ? 'nav-active' : ''}`}
           >
             <History size={18} />
-            <span>Historique</span>
+            <span>{t("Historique")}</span>
             {currentPage === 'history' && <span className="nav-indicator" />}
           </button>
         )}
@@ -63,36 +90,47 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             className={`nav-item ${currentPage === 'admin' ? 'nav-active' : ''}`}
           >
             <Shield size={18} />
-            <span>Dashboard Admin</span>
+            <span>{t("Dashboard Admin")}</span>
             {currentPage === 'admin' && <span className="nav-indicator" />}
           </button>
         )}
 
+        <button
+          onClick={() => onNavigate('settings')}
+          className={`nav-item ${currentPage === 'settings' ? 'nav-active' : ''}`}
+        >
+          <Settings size={18} />
+          <span>{t("Paramètres")}</span>
+          {currentPage === 'settings' && <span className="nav-indicator" />}
+        </button>
+
         {(role === 'user' || role === 'guest') && (
           <>
             <div className="nav-divider" />
-            <div className="nav-section-label">Outils</div>
+            <div className="nav-section-label">{t("Outils")}</div>
             <button onClick={() => navigate('/bank/login')} className="nav-item">
               <Building size={18} />
-              <span>Portail Bancaire</span>
+              <span>{t("Portail Bancaire")}</span>
             </button>
           </>
         )}
 
       </nav>
 
-      {/* Metrics card */}
+      {/* Metrics card — valeurs dynamiques depuis le backend */}
       <div className="sidebar-metrics">
         <div className="metric-row">
           <div className="metric-item">
             <BarChart3 size={14} color="var(--accent)" />
-            <span className="metric-label">Précision</span>
-            <span className="metric-val">87%</span>
+            <span className="metric-label">{t("Précision")}</span>
+            <span className="metric-val">{precision}</span>
           </div>
           <div className="metric-item">
-            <Zap size={14} color="#10b981" />
-            <span className="metric-label">RPA actif</span>
-            <span className="metric-val" style={{ color: '#10b981' }}>ON</span>
+            <Zap size={14} color="var(--green)" />
+            <span className="metric-label">{t("Jobs RPA")}</span>
+            <span className="metric-val" style={{ color: 'var(--green)' }}>
+              {rpaCount !== null ? rpaCount : '--'}
+            </span>
           </div>
         </div>
       </div>
@@ -105,13 +143,10 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           style={{ width: '100%', justifyContent: 'flex-start', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer' }}
         >
           <Zap size={16} />
-          <span>Déconnexion</span>
+          <span>{t("Déconnexion")}</span>
         </button>
-        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-muted)', fontSize: '10px' }}>
-          <Shield size={12} />
-          <span>Données chiffrées · BOA</span>
-        </div>
       </div>
     </aside>
   );
 }
+

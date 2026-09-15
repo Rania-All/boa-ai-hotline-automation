@@ -1,0 +1,48 @@
+% ============================================================
+%  Section 3.2.1 – Environnement matériel
+%  Projet : BOA AI Hotline Automation
+% ============================================================
+
+% Packages requis (à ajouter au préambule s'ils ne le sont pas déjà)
+% \usepackage[table,xcdraw]{xcolor}
+% \usepackage{tabularx}
+% \usepackage{float}
+
+% ── Couleurs de table ────────────────────────────────────────
+\definecolor{boaGreen}{HTML}{2E7D32}       % vert foncé entête
+\definecolor{boaLightGreen}{HTML}{C8E6C9}  % vert clair lignes
+\definecolor{boaGray}{HTML}{F5F5F5}        % gris très clair lignes
+\definecolor{guidelineBg}{HTML}{F1F8E9}    % fond bloc guideline
+\definecolor{guidelineBorder}{HTML}{558B2F}% bordure bloc guideline
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Environnement matériel}
+% ─────────────────────────────────────────────────────────────
+
+Le développement a été réalisé sur un poste de travail personnel doté des caractéristiques suivantes :
+
+\vspace{8pt}
+
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{12pt}
+  \begin{tabularx}{\textwidth}{|>{\bfseries\color{white}\columncolor{boaGreen}}l|X|}
+    \hline\hline
+    \rowcolor{boaGreen}
+    \textcolor{white}{Composant} & \textcolor{white}{Spécification} \\ \hline
+    
+    Processeur & HP AMD Ryzen 7 PRO 5850U with Radeon Graphics (8 cœurs, 16 threads) \\ 
+    Mémoire RAM & \cellcolor{boaGray} 16 Go \\ 
+    
+    Stockage & SSD 512 Go \\ 
+    Système d’exploitation & \cellcolor{boaGray} Microsoft Windows 11 Professionnel (64-bits) \\ 
+    \hline\hline
+  \end{tabularx}
+  \caption{Spécifications techniques du poste de travail de développement}
+  \label{tab:specs_materiel}
+\end{table}
+
+\vspace{8pt}
+
+Cette configuration matérielle a permis de garantir une gestion optimisée des ressources, essentielle pour le déploiement local de l'architecture backend, l'exécution des conteneurs de modèles d'IA (via Ollama) et le fonctionnement des outils d'automatisation UiPath.

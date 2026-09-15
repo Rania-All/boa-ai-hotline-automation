@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diagramme de Gantt – BOA AI Hotline Automation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --text: #e2e8f0;
+      --text-muted: #8892b0;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --phase1: #7c3aed;
+      --phase2: #0ea5e9;
+      --phase3: #10b981;
+      --phase4: #f59e0b;
+      --highest: #ef4444;
+      --high: #f97316;
+      --medium: #eab308;
+      --radius: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1a1d27 0%, #12162b 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .header-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+    }
+    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p  { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .badge {
+      margin-left: auto;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.35);
+      color: var(--accent);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ── Layout ── */
+    .wrapper { padding: 32px 40px; overflow-x: auto; }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+      align-items: center;
+    }
+    .legend-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-right: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── Gantt Table ── */
+    .gantt-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      min-width: 1000px;
+    }
+
+    .gantt-table { width: 100%; border-collapse: collapse; }
+
+    /* Header row */
+    .gantt-table thead tr th {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 14px 12px;
+      white-space: nowrap;
+    }
+    .th-task { text-align: left; width: 320px; padding-left: 20px !important; }
+    .th-week  { text-align: center; border-left: 1px solid var(--border); }
+
+    /* Week-month header */
+    .month-header tr th {
+      background: linear-gradient(180deg, #1e2236 0%, #1a1d27 100%);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    /* Rows */
+    .gantt-table tbody tr { transition: background 0.2s; }
+    .gantt-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .gantt-table tbody tr td { border-bottom: 1px solid rgba(46,50,80,0.6); }
+
+    /* Task cell */
+    .td-task {
+      padding: 0 12px 0 0;
+      width: 320px;
+      vertical-align: middle;
+    }
+    .task-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px 12px 20px;
+    }
+    .task-inner.sub { padding-left: 44px; }
+    .task-id {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 5px;
+      white-space: nowrap;
+      letter-spacing: 0.3px;
+    }
+    .task-name { font-size: 13px; font-weight: 500; flex: 1; }
+    .task-name.phase { font-size: 13px; font-weight: 700; }
+    .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Phase rows */
+    .row-phase td {
+      background: rgba(255,255,255,0.03);
+      border-top: 2px solid var(--border) !important;
+    }
+
+    /* Bar cell */
+    .td-bar {
+      padding: 8px 4px;
+      vertical-align: middle;
+      border-left: 1px solid rgba(46,50,80,0.4);
+      position: relative;
+    }
+    .week-separator { border-left: 1px solid rgba(46,50,80,0.4) !important; }
+
+    .bar-wrap { display: flex; align-items: center; height: 32px; position: relative; }
+    .bar {
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+    .bar:hover {
+      transform: scaleY(1.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      z-index: 10;
+    }
+    .bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: rgba(255,255,255,0.12);
+      border-radius: 6px 6px 0 0;
+    }
+
+    /* Phase colors */
+    .bar-phase1 { background: linear-gradient(90deg, #7c3aed, #9f6df5); box-shadow: 0 2px 12px rgba(124,58,237,0.4); }
+    .bar-phase2 { background: linear-gradient(90deg, #0284c7, #38bdf8); box-shadow: 0 2px 12px rgba(2,132,199,0.4); }
+    .bar-phase3 { background: linear-gradient(90deg, #059669, #34d399); box-shadow: 0 2px 12px rgba(5,150,105,0.4); }
+
+    /* Today line */
+    .today-col { position: relative; }
+    .today-col::before {
+      content: 'Aujourd\'hui';
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--accent2);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .today-col::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 50%;
+      width: 2px;
+      background: var(--accent2);
+      opacity: 0.7;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--accent); }
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .stat-val { font-size: 22px; font-weight: 800; }
+    .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Tooltip */
+    .tooltip {
+      display: none;
+      position: fixed;
+      background: #1e2236;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      z-index: 9999;
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      min-width: 200px;
+    }
+    .tooltip.active { display: block; }
+    .tooltip-id { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+    .tooltip-row { display: flex; justify-content: space-between; gap: 16px; color: var(--text-muted); margin-top: 3px; }
+    .tooltip-val { color: var(--text); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-icon">🤖</div>
+  <div>
+    <h1>BOA AI Hotline Automation</h1>
+    <p>Diagramme de Gantt — Plan de projet ADLH</p>
+  </div>
+  <div class="badge">16 semaines · 4 phases · 15 tâches</div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-id" id="tt-id"></div>
+  <div class="tooltip-row"><span>Durée</span><span class="tooltip-val" id="tt-dur"></span></div>
+  <div class="tooltip-row"><span>Début</span><span class="tooltip-val" id="tt-start"></span></div>
+  <div class="tooltip-row"><span>Fin</span><span class="tooltip-val" id="tt-end"></span></div>
+  <div class="tooltip-row"><span>Priorité</span><span class="tooltip-val" id="tt-prio"></span></div>
+</div>
+
+<div class="wrapper">
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(124,58,237,0.15)">📋</div>
+      <div>
+        <div class="stat-val">15</div>
+        <div class="stat-lbl">Tâches au total</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(14,165,233,0.15)">🗂</div>
+      <div>
+        <div class="stat-val">4</div>
+        <div class="stat-lbl">Phases principales</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.15)">📅</div>
+      <div>
+        <div class="stat-val">16</div>
+        <div class="stat-lbl">Semaines de projet</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(239,68,68,0.15)">⚡</div>
+      <div>
+        <div class="stat-val">7</div>
+        <div class="stat-lbl">Priorité Highest</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <span class="legend-title">Phases</span>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div> Analyse & Conception</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0ea5e9"></div> Développement IA & Backend</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Intégration UiPath</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Tests & Industrialisation</div>
+    <span style="margin-left:20px" class="legend-title">Priorité</span>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Highest</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div> High</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#eab308"></div> Medium</div>
+  </div>
+
+  <!-- Gantt -->
+  <div class="gantt-container">
+    <table class="gantt-table" id="ganttTable">
+      <thead>
+        <tr class="month-header" id="monthRow"></tr>
+        <tr id="weekRow">
+          <th class="th-task">Ticket / Tâche</th>
+        </tr>
+      </thead>
+      <tbody id="ganttBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+// Projet démarre le 2026-07-20 (lundi), 12 semaines
+const PROJECT_START = new Date('2026-07-20');
+const TOTAL_WEEKS   = 16;
+const TODAY         = new Date('2026-07-20');
+
+function weekOf(d) {
+  const ms = d - PROJECT_START;
+  return Math.floor(ms / (7*24*3600*1000));
+}
+const TODAY_WEEK = weekOf(TODAY); // 0
+
+// Tasks: { id, name, phase, color, start (week 0-based), dur (weeks), priority, sub }
+const tasks = [
+  // Phase 1 – Analyse & Conception (violet)
+  { id:'ADLH-1',  name:'Analyse & Conception & Formation UiPath', phase:1, color:'phase1', start:0, dur:4, priority:'Medium', sub:false },
+  { id:'ADLH-5',  name:'Analyse des cas d\'usage de la hotline',   phase:1, color:'phase1', start:0, dur:1, priority:'High',   sub:true  },
+  { id:'ADLH-6',  name:'Formation UiPath Academy',                  phase:1, color:'phase1', start:1, dur:1, priority:'High',   sub:true  },
+  { id:'ADLH-7',  name:'Nettoyage et structuration des données',    phase:1, color:'phase1', start:2, dur:1, priority:'Medium', sub:true  },
+  { id:'ADLH-8',  name:'Conception de l\'architecture technique',   phase:1, color:'phase1', start:3, dur:1, priority:'Highest',sub:true  },
+
+  // Phase 2 – Développement IA & Backend (bleu)
+  { id:'ADLH-2',  name:'Développement IA & Backend',                phase:2, color:'phase2', start:4, dur:5, priority:'Medium', sub:false },
+  { id:'ADLH-10', name:'Implémentation du module de classification', phase:2, color:'phase2', start:4, dur:2, priority:'Highest',sub:true  },
+  { id:'ADLH-11', name:'Développement des APIs REST Spring Boot',    phase:2, color:'phase2', start:5, dur:2, priority:'Highest',sub:true  },
+  { id:'ADLH-12', name:'Implémentation du moteur de décision',       phase:2, color:'phase2', start:7, dur:1, priority:'Highest',sub:true  },
+  { id:'ADLH-13', name:'Écriture des tests unitaires',               phase:2, color:'phase2', start:8, dur:1, priority:'Medium', sub:true  },
+
+  // Phase 3 – Intégration UiPath (vert)
+  { id:'ADLH-3',  name:'Intégration UiPath',                         phase:3, color:'phase3', start:9, dur:3, priority:'Medium', sub:false },
+  { id:'ADLH-14', name:'Implémentation du service d\'authentification',phase:3,color:'phase3', start:9, dur:1, priority:'Highest',sub:true  },
+  { id:'ADLH-15', name:'Développement du déclenchement des robots',   phase:3,color:'phase3', start:10,dur:1, priority:'Highest',sub:true  },
+  { id:'ADLH-16', name:'Tests d\'intégration avec les robots',         phase:3,color:'phase3', start:11,dur:1, priority:'Medium', sub:true  },
+
+  // Phase 4 – Tests & Industrialisation (amber)
+  { id:'ADLH-4',  name:'Tests & Industrialisation',                   phase:4, color:'phase4', start:12,dur:4, priority:'Medium', sub:false },
+  { id:'ADLH-17', name:'Sécurité et masquage des données bancaires',  phase:4, color:'phase4', start:12,dur:1, priority:'High',   sub:true  },
+  { id:'ADLH-18', name:'Interface de simulation de virement',         phase:4, color:'phase4', start:13,dur:1, priority:'Medium', sub:true  },
+  { id:'ADLH-19', name:'Tests utilisateurs (Hotline)',                 phase:4, color:'phase4', start:14,dur:1, priority:'High',   sub:true  },
+  { id:'ADLH-20', name:'Rédaction de la documentation technique',     phase:4, color:'phase4', start:15,dur:1, priority:'High',   sub:true  },
+];
+
+const phaseColors = { phase1:'#7c3aed', phase2:'#0ea5e9', phase3:'#10b981', phase4:'#f59e0b' };
+const prioColors  = { Highest:'#ef4444', High:'#f97316', Medium:'#eab308' };
+
+// ── Build weeks ──────────────────────────────────────────────────────────────
+function addDays(d, n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function fmtDate(d) {
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+}
+
+const weeks = [];
+for (let w=0; w<TOTAL_WEEKS; w++) {
+  const s = addDays(PROJECT_START, w*7);
+  const e = addDays(s, 6);
+  weeks.push({ w, s, e, label: `S${w+1}` });
+}
+
+// Group weeks by month for header
+function buildMonthGroups() {
+  const groups = [];
+  let cur = null;
+  weeks.forEach((wk,i)=>{
+    const m = wk.s.toLocaleDateString('fr-FR',{month:'long', year:'numeric'});
+    if (!cur || cur.label !== m) {
+      cur = { label: m, count: 1 };
+      groups.push(cur);
+    } else { cur.count++; }
+  });
+  return groups;
+}
+
+// ── Render header ────────────────────────────────────────────────────────────
+const monthRow = document.getElementById('monthRow');
+const weekRow  = document.getElementById('weekRow');
+
+// Month row: empty task cell + month spans
+const thEmpty = document.createElement('th');
+thEmpty.style.textAlign='left';
+thEmpty.style.width='320px';
+monthRow.appendChild(thEmpty);
+
+buildMonthGroups().forEach(g=>{
+  const th=document.createElement('th');
+  th.colSpan=g.count;
+  th.textContent=g.label.charAt(0).toUpperCase()+g.label.slice(1);
+  th.style.borderLeft='1px solid #2e3250';
+  monthRow.appendChild(th);
+});
+
+// Week row
+weeks.forEach((wk,i)=>{
+  const th=document.createElement('th');
+  th.className='th-week week-separator';
+  th.innerHTML=`<div>${wk.label}</div><div style="font-size:9px;font-weight:400;color:#6b7280;margin-top:1px">${fmtDate(wk.s)}</div>`;
+  if (i===TODAY_WEEK) th.style.color='#00d4aa';
+  weekRow.appendChild(th);
+});
+
+// ── Render rows ──────────────────────────────────────────────────────────────
+const body = document.getElementById('ganttBody');
+
+tasks.forEach(t=>{
+  const tr = document.createElement('tr');
+  if(!t.sub) tr.classList.add('row-phase');
+
+  // Task cell
+  const td = document.createElement('td');
+  td.className='td-task';
+  const inner = document.createElement('div');
+  inner.className = t.sub ? 'task-inner sub' : 'task-inner';
+
+  // ID badge
+  const idBadge = document.createElement('span');
+  idBadge.className='task-id';
+  idBadge.textContent=t.id;
+  idBadge.style.background = phaseColors[t.color]+'28';
+  idBadge.style.color = phaseColors[t.color];
+  inner.appendChild(idBadge);
+
+  // Name
+  const name = document.createElement('span');
+  name.className = t.sub ? 'task-name' : 'task-name phase';
+  name.textContent = t.name;
+  inner.appendChild(name);
+
+  // Priority dot
+  const dot = document.createElement('span');
+  dot.className='priority-dot';
+  dot.style.background = prioColors[t.priority]||'#eab308';
+  inner.appendChild(dot);
+
+  td.appendChild(inner);
+  tr.appendChild(td);
+
+  // Week cells with bar
+  weeks.forEach((wk,i)=>{
+    const td2=document.createElement('td');
+    td2.className='td-bar week-separator';
+    if(i===TODAY_WEEK) td2.classList.add('today-col');
+
+    // Does bar start here?
+    if(i===t.start){
+      const wrap=document.createElement('div');
+      wrap.className='bar-wrap';
+      wrap.style.gridColumn=`span ${t.dur}`;
+
+      const bar=document.createElement('div');
+      bar.className=`bar bar-${t.color}`;
+      // Width spans multiple cells: we handle via colSpan trick below
+      bar.textContent = t.dur>=2 ? t.id : '';
+      bar.setAttribute('data-task', JSON.stringify(t));
+
+      bar.addEventListener('mouseenter', showTooltip);
+      bar.addEventListener('mousemove',  moveTooltip);
+      bar.addEventListener('mouseleave', hideTooltip);
+
+      wrap.appendChild(bar);
+      td2.appendChild(wrap);
+
+      if(t.dur>1){
+        td2.colSpan=t.dur;
+        // Skip next dur-1 cells
+        tr._skipUntil = i+t.dur-1;
+      }
+    } else if(tr._skipUntil && i<=tr._skipUntil){
+      // skip
+      return;
+    }
+
+    tr.appendChild(td2);
+  });
+
+  body.appendChild(tr);
+});
+
+// ── Tooltip ──────────────────────────────────────────────────────────────────
+const tooltip=document.getElementById('tooltip');
+function showTooltip(e){
+  const t=JSON.parse(e.currentTarget.getAttribute('data-task'));
+  document.getElementById('tt-id').textContent=`${t.id} – ${t.name}`;
+  document.getElementById('tt-dur').textContent=`${t.dur} semaine${t.dur>1?'s':''}`;
+  const s=addDays(PROJECT_START, t.start*7);
+  const en=addDays(s,(t.dur*7)-1);
+  document.getElementById('tt-start').textContent=fmtDate(s);
+  document.getElementById('tt-end').textContent=fmtDate(en);
+  document.getElementById('tt-prio').textContent=t.priority;
+  tooltip.classList.add('active');
+}
+function moveTooltip(e){
+  tooltip.style.left=(e.clientX+14)+'px';
+  tooltip.style.top =(e.clientY-10)+'px';
+}
+function hideTooltip(){ tooltip.classList.remove('active'); }
+</script>
+</body>
+</html>

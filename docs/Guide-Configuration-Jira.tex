@@ -1,0 +1,66 @@
+% --- ANNEXE : GUIDE DE CONFIGURATION JIRA ---
+\section{Guide de Configuration du Projet sur Jira Software}
+\label{sec:guide_jira}
+
+Ce guide présente la méthodologie pratique pour configurer le projet \textbf{Automatisation Hotline - Version Java} sur l'outil de gestion agile Jira Software, en s'appuyant sur le plan de réalisation de 4 mois présenté dans ce rapport.
+
+\subsection{Étape 1 : Création du projet Scrum}
+\begin{enumerate}
+    \item Connectez-vous sur la plateforme Jira Cloud.
+    \item Sélectionnez l'option \textbf{Créer un projet} et choisissez le modèle \textbf{Scrum}.
+    \item Optez pour un \textbf{projet géré par l'équipe} (\textit{Team-managed project}) pour simplifier l'administration.
+    \item Nommez le projet \textit{Automatisation Hotline BOA} (Clé générée : \texttt{AHB}).
+\end{enumerate}
+
+\subsection{Étape 2 : Définition des Epics (Month-by-Month)}
+Dans Jira, créez quatre Epics correspondant chacun aux quatre mois clés du planning :
+\begin{itemize}
+    \item \textbf{Epic 1} : \texttt{Mois 1 : Analyse \& Conception \& Formation UiPath} (S1-S4)
+    \item \textbf{Epic 2} : \texttt{Mois 2 : Développement IA \& Backend} (S5-S8)
+    \item \textbf{Epic 3} : \texttt{Mois 3 : Intégration UiPath} (S9-S12)
+    \item \textbf{Epic 4} : \texttt{Mois 4 : Tests \& Industrialisation} (S13-S16)
+\end{itemize}
+
+\subsection{Étape 3 : Configuration des Sprints}
+Dans l'onglet \textbf{Backlog}, créez huit sprints successifs d'une durée fixe de deux semaines (10 jours ouvrés) chacun. Les dates planifiées sont définies comme suit :
+\begin{itemize}
+    \item \textbf{Sprint 1 (S1-S2)} : 16 février au 1er mars
+    \item \textbf{Sprint 2 (S3-S4)} : 2 mars au 15 mars
+    \item \textbf{Sprint 3 (S5-S6)} : 16 mars au 29 mars
+    \item \textbf{Sprint 4 (S7-S8)} : 30 mars au 12 avril
+    \item \textbf{Sprint 5 (S9-S10)} : 13 avril au 26 avril
+    \item \textbf{Sprint 6 (S11-S12)} : 27 avril au 10 mai
+    \item \textbf{Sprint 7 (S13-S14)} : 11 mai au 24 mai
+    \item \textbf{Sprint 8 (S15-S16)} : 25 mai au 7 juin
+\end{itemize}
+
+\subsection{Étape 4 : Alimentation du Backlog par Sprint}
+Saisissez les tâches et récits utilisateurs dans le backlog, puis associez-les à leur Epic et Sprint respectifs :
+
+\subsubsection{Mois 1 (Analyse, Conception \& Formation)}
+\begin{itemize}
+    \item \textbf{Sprint 1} : Analyse des cas d'usage fournis ; Formation UiPath Academy ; Nettoyage et structuration des données.
+    \item \textbf{Sprint 2} : Conception de l'architecture Spring Boot ; Définition des flux N1-RR.
+\end{itemize}
+
+\subsubsection{Mois 2 (Développement IA \& Backend)}
+\begin{itemize}
+    \item \textbf{Sprint 3} : Implémentation du module de classification ; Développement des APIs REST Spring Boot.
+    \item \textbf{Sprint 4} : Implémentation du moteur de décision ; Écriture des tests unitaires.
+\end{itemize}
+
+\subsubsection{Mois 3 (Intégration UiPath)}
+\begin{itemize}
+    \item \textbf{Sprint 5} : Implémentation du service d'authentification Orchestrator ; Développement du déclenchement de Job via l'API.
+    \item \textbf{Sprint 6} : Tests avec les robots existants ; Gestion des logs et erreurs d'intégration.
+\end{itemize}
+
+\subsubsection{Mois 4 (Tests \& Industrialisation)}
+\begin{itemize}
+    \item \textbf{Sprint 7} : Tests utilisateurs avec l'équipe Hotline ; Optimisation des performances.
+    \item \textbf{Sprint 8} : Rédaction de la documentation technique complète ; Préparation de la soutenance.
+\end{itemize}
+
+\subsection{Étape 5 : Pilotage quotidien du tableau Scrum}
+Une fois le \textbf{Sprint 1} démarré, utilisez le tableau de bord actif pour animer la mêlée quotidienne (\textit{Daily Scrum}). Les membres de l'équipe font glisser les tickets selon leur avancement réel entre les colonnes : \texttt{À faire} $\rightarrow$ \texttt{En cours} $\rightarrow$ \texttt{Terminé}.
+A la fin de l'itération de deux semaines, complétez le sprint pour basculer les éléments restants sur l'itération suivante.

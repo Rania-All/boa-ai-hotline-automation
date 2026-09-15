@@ -1,0 +1,106 @@
+% ============================================================
+%  Section 3.2.3 – Dictionnaire de données
+%  Projet : BOA AI Hotline Automation
+% ============================================================
+
+% Packages requis (à ajouter au préambule s'ils ne le sont pas déjà)
+% \usepackage[table,xcdraw]{xcolor}
+% \usepackage{tabularx}
+% \usepackage{amssymb}        % Requis pour \checkmark
+% \usepackage{tcolorbox}
+% \usepackage{fontawesome5}
+
+% ── Couleurs BOA ────────────────────────────────────────────
+\definecolor{boaGreen}{HTML}{2E7D32}       % vert foncé entête
+\definecolor{boaLightGreen}{HTML}{C8E6C9}  % vert clair lignes
+\definecolor{boaGray}{HTML}{F5F5F5}        % gris très clair lignes
+\definecolor{guidelineBg}{HTML}{F1F8E9}    % fond bloc guideline
+\definecolor{guidelineBorder}{HTML}{558B2F}% bordure bloc guideline
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Dictionnaire de données}
+% ─────────────────────────────────────────────────────────────
+
+% ── Bloc Guideline ──────────────────────────────────────────
+\begin{tcolorbox}[
+  colback   = guidelineBg,
+  colframe  = guidelineBorder,
+  left      = 6pt,
+  right     = 6pt,
+  top       = 4pt,
+  bottom    = 4pt,
+  arc       = 2pt,
+  boxrule   = 0.8pt
+]
+  \textbf{\faBookmark\; Guideline :}
+  \textit{Définissez précisément les structures des tables de la base de données de l'application en complétant le tableau ci-dessous.}
+\end{tcolorbox}
+
+\vspace{10pt}
+
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{4pt}
+  \small % Réduction légère de la taille pour faire tenir toutes les colonnes
+  \begin{tabularx}{\textwidth}{|l|l|c|c|l|X|c|c|l|}
+    \hline
+    \rowcolor{boaGreen}
+    \textcolor{white}{\textbf{Nom colonne}} & 
+    \textcolor{white}{\textbf{Type}} & 
+    \textcolor{white}{\textbf{Taille}} & 
+    \textcolor{white}{\textbf{Oblig.}} & 
+    \textcolor{white}{\textbf{Défaut}} & 
+    \textcolor{white}{\textbf{Valeurs / Description}} & 
+    \textcolor{white}{\textbf{Clé P.}} & 
+    \textcolor{white}{\textbf{Clé E.}} & 
+    \textcolor{white}{\textbf{Table}} \\ \hline
+    
+    % ── Table chat_history ──────────────────────────────────
+    \rowcolor{boaGray}
+    \textbf{id} & varchar & 255 & O & - & Identifiant unique de l'historique & \checkmark & - & chat\_history \\ \hline
+    
+    \rowcolor{white}
+    \textbf{question} & varchar & 4000 & O & - & Question saisie par l'utilisateur & - & - & chat\_history \\ \hline
+    
+    \rowcolor{boaGray}
+    \textbf{answer} & varchar & 10000 & N & - & Réponse générée par le chatbot & - & - & chat\_history \\ \hline
+    
+    \rowcolor{white}
+    \textbf{confidence} & double & - & N & - & Score de confiance de la classification & - & - & chat\_history \\ \hline
+    
+    \rowcolor{boaGray}
+    \textbf{session\_id} & varchar & 128 & O & - & ID de session de discussion & - & - & chat\_history \\ \hline
+    
+    \rowcolor{white}
+    \textbf{source} & varchar & 64 & N & - & Canal de provenance (ex: \texttt{Chatbot}) & - & - & chat\_history \\ \hline
+    
+    \rowcolor{boaGray}
+    \textbf{user\_email} & varchar & 128 & N & - & Email de l'utilisateur connecté & - & - & chat\_history \\ \hline
+    
+    \rowcolor{white}
+    \textbf{created\_at} & timestamptz & 6 & O & \scriptsize{NOW()} & Horodatage avec fuseau horaire & - & - & chat\_history \\ \hline
+    
+    \rowcolor{boaGray}
+    \textbf{faq\_item\_id} & bigint & - & N & - & ID de la FAQ référencée (si réponse issue de la FAQ) & - & \checkmark & faq\_items \\ \hline
+    
+    % ── Table faq_items ─────────────────────────────────────
+    \rowcolor{boaLightGreen}
+    \textbf{id} & bigint & - & O & \scriptsize{IDENTITY} & Clé primaire auto-incrémentée & \checkmark & - & faq\_items \\ \hline
+    
+    \rowcolor{white}
+    \textbf{question} & varchar & 1000 & O & - & Question type dans la FAQ & - & - & faq\_items \\ \hline
+    
+    \rowcolor{boaGray}
+    \textbf{norm\_question} & varchar & 1000 & N & - & Question normalisée sans accents & - & - & faq\_items \\ \hline
+    
+    \rowcolor{white}
+    \textbf{answer} & text & - & O & - & Texte de réponse associé & - & - & faq\_items \\ \hline
+    
+    \rowcolor{boaGray}
+    \textbf{embedding} & float8[] & - & O & - & Vecteur sémantique de la question & - & - & faq\_items \\ \hline
+    
+  \end{tabularx}
+  \caption{Dictionnaire de données des tables chat\_history et faq\_items}
+  \label{tab:dictionnaire_donnees}
+\end{table}

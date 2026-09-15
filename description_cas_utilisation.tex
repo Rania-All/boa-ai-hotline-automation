@@ -1,0 +1,235 @@
+% ============================================================
+%  Section 2.3.3 – Description textuelle des cas d'utilisation
+%  Projet : BOA AI Hotline Automation
+% ============================================================
+
+% Packages requis (à ajouter au préambule s'ils ne le sont pas déjà)
+% \usepackage[table,xcdraw]{xcolor}
+% \usepackage{tabularx}
+% \usepackage{tcolorbox}
+% \usepackage{fontawesome5}
+% \usepackage{float}          % REQUIS pour forcer la position avec [H]
+
+% ── Couleurs BOA ────────────────────────────────────────────
+\definecolor{boaGreen}{HTML}{2E7D32}       % vert foncé entête
+\definecolor{boaLightGreen}{HTML}{C8E6C9}  % vert clair lignes
+\definecolor{boaGray}{HTML}{F5F5F5}        % gris très clair lignes
+\definecolor{guidelineBg}{HTML}{F1F8E9}    % fond bloc guideline
+\definecolor{guidelineBorder}{HTML}{558B2F}% bordure bloc guideline
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Description textuelle des cas d'utilisation}
+% ─────────────────────────────────────────────────────────────
+
+% ── Bloc Guideline ──────────────────────────────────────────
+\begin{tcolorbox}[
+  colback   = guidelineBg,
+  colframe  = guidelineBorder,
+  left      = 6pt,
+  right     = 6pt,
+  top       = 4pt,
+  bottom    = 4pt,
+  arc       = 2pt,
+  boxrule   = 0.8pt
+]
+  \textbf{\faBookmark\; Guideline :}
+  \textit{Pour chaque cas d'utilisation principal, fournissez une description textuelle structurée selon le tableau ci-dessous.}
+\end{tcolorbox}
+
+\vspace{10pt}
+
+% ── CU 1 : Poser une question (FAQ) ──────────────────────────
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{10pt}
+  \begin{tabularx}{\textwidth}{|>{\bfseries\color{white}\columncolor{boaGreen}}l|X|}
+    \hline
+    \multicolumn{2}{|>{\bfseries\color{white}\columncolor{boaGreen}}c|}{Cas d'utilisation : Poser une question et obtenir une réponse FAQ (CU-01)} \\ \hline
+    Acteurs & Client BOA / Utilisateur \\ \hline
+    Pré-conditions & 
+    Le client a démarré l'interface de discussion (ChatBot).\\ \hline
+    Scénario nominal & 
+    1. Le client pose une question ou saisit une requête dans le ChatBot.\newline
+    2. Le ChatBot authentifie la session de l'utilisateur.\newline
+    3. Le système analyse l'intention de la question via le module IA de classification.\newline
+    4. Le système récupère la réponse adéquate dans la FAQ.\newline
+    5. Le système affiche la réponse sur l'interface du ChatBot.\newline
+    6. Le client consulte la réponse. \\ \hline
+    Scénarios alternatifs & 
+    \textbf{A3. Intention non reconnue :}\newline
+    Si le module IA ne comprend pas la question, le ChatBot demande au client de reformuler sa requête.\newline
+    \textbf{A4. Réponse non trouvée dans la FAQ :}\newline
+    Si la base de connaissances ne contient pas la réponse, le ChatBot propose au client de contacter le support ou de formuler une demande d'assistance. \\ \hline
+    Post-conditions & Le client a reçu la réponse à sa question et la discussion se poursuit. \\ \hline
+  \end{tabularx}
+  \caption{Description du cas d'utilisation - Poser une question (FAQ)}
+  \label{tab:cu_faq}
+\end{table}
+
+\vspace{15pt}
+
+% ── CU 2 : Faire un virement ──────────────────────────────────
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{10pt}
+  \begin{tabularx}{\textwidth}{|>{\bfseries\color{white}\columncolor{boaGreen}}l|X|}
+    \hline
+    \multicolumn{2}{|>{\bfseries\color{white}\columncolor{boaGreen}}c|}{Cas d'utilisation : Déclencher une tâche RPA - Faire un virement (CU-02)} \\ \hline
+    Acteurs & Client BOA / Utilisateur (Initiateur), Robot ROA / UiPath (Exécuteur) \\ \hline
+    Pré-conditions & 
+    - Le client est connecté au ChatBot.\newline
+    - Le client s'est authentifié sur le Portail BOA. \\ \hline
+    Scénario nominal & 
+    1. Le client formule une demande de virement auprès du ChatBot.\newline
+    2. Le ChatBot sollicite la confirmation de l'authentification Portail BOA.\newline
+    3. Le client saisit les informations du virement (bénéficiaire, montant).\newline
+    4. Le système envoie un code de confirmation (OTP) au client.\newline
+    5. Le client saisit le code de confirmation valide.\newline
+    6. Le backend (Spring Boot) valide le virement et transmet la commande de déclenchement au Robot ROA (UiPath).\newline
+    7. Le Robot ROA effectue le virement sur le système bancaire central.\newline
+    8. Le Robot ROA retourne le statut de l'opération (succès) au backend.\newline
+    9. Le ChatBot notifie le client du succès de l'opération. \\ \hline
+    Scénarios alternatifs & 
+    \textbf{A5. Code de confirmation invalide :}\newline
+    Si le code saisi est incorrect ou expiré, le système refuse la transaction et le ChatBot demande de générer un nouveau code.\newline
+    \textbf{A7. Solde insuffisant / Limite de virement atteinte :}\newline
+    Le système de décision ou le Robot ROA constate un problème d'éligibilité. L'opération est annulée et le client est notifié de l'échec de la transaction.\\ \hline
+    Post-conditions & Le virement est exécuté de manière sécurisée et les soldes de comptes sont mis à jour. \\ \hline
+  \end{tabularx}
+  \caption{Description du cas d'utilisation - Faire un virement}
+  \label{tab:cu_virement}
+\end{table}
+
+\vspace{15pt}
+
+% ── CU 3 : Débloquer Carte ───────────────────────────────────
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{10pt}
+  \begin{tabularx}{\textwidth}{|>{\bfseries\color{white}\columncolor{boaGreen}}l|X|}
+    \hline
+    \multicolumn{2}{|>{\bfseries\color{white}\columncolor{boaGreen}}c|}{Cas d'utilisation : Déclencher une tâche RPA - Débloquer Carte (CU-03)} \\ \hline
+    Acteurs & Client BOA / Utilisateur (Initiateur), Robot ROA / UiPath (Exécuteur) \\ \hline
+    Pré-conditions & 
+    - Le client est connecté au ChatBot.\newline
+    - Le client s'est authentifié sur le Portail BOA.\newline
+    - Le client possède une carte bancaire actuellement bloquée ou restreinte. \\ \hline
+    Scénario nominal & 
+    1. Le client demande à débloquer sa carte bancaire via le ChatBot.\newline
+    2. Le ChatBot demande confirmation de son identité via le Portail BOA.\newline
+    3. Le client sélectionne la carte à débloquer.\newline
+    4. Le système envoie un code de confirmation (OTP) au client.\newline
+    5. Le client saisit le code de confirmation valide.\newline
+    6. Le backend transmet l'ordre de déblocage au Robot ROA (UiPath).\newline
+    7. Le Robot ROA accède au système monétique central et effectue le déblocage.\newline
+    8. Le Robot ROA confirme le succès du déblocage au backend.\newline
+    9. Le ChatBot informe le client que sa carte est à nouveau active. \\ \hline
+    Scénarios alternatifs & 
+    \textbf{A5. Code de confirmation (OTP) incorrect :}\newline
+    La carte reste bloquée et le client doit redemander un code.\newline
+    \textbf{A7. Carte non éligible au déblocage autonome (ex: carte expirée, volée) :}\newline
+    Le système ou le Robot rejette la demande, et le ChatBot invite le client à contacter un conseiller physique. \\ \hline
+    Post-conditions & La carte bancaire du client est débloquée avec succès et prête à l'emploi. \\ \hline
+  \end{tabularx}
+  \caption{Description du cas d'utilisation - Débloquer une carte bancaire}
+  \label{tab:cu_debloquer_carte}
+\end{table}
+
+\vspace{15pt}
+
+% ── CU 4 : Activer Dotation E-Commerce ───────────────────────
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{10pt}
+  \begin{tabularx}{\textwidth}{|>{\bfseries\color{white}\columncolor{boaGreen}}l|X|}
+    \hline
+    \multicolumn{2}{|>{\bfseries\color{white}\columncolor{boaGreen}}c|}{Cas d'utilisation : Déclencher une tâche RPA - Activer Dotation E-Commerce (CU-04)} \\ \hline
+    Acteurs & Client BOA / Utilisateur (Initiateur), Robot ROA / UiPath (Exécuteur) \\ \hline
+    Pré-conditions & 
+    - Le client est connecté au ChatBot.\newline
+    - Le client s'est authentifié sur le Portail BOA. \\ \hline
+    Scénario nominal & 
+    1. Le client demande à activer sa dotation e-commerce.\newline
+    2. Le ChatBot demande confirmation via le Portail BOA.\newline
+    3. Le client définit ou valide le montant de la dotation souhaitée.\newline
+    4. Le système transmet un code de confirmation (OTP) par SMS/email.\newline
+    5. Le client saisit le code de confirmation valide.\newline
+    6. Le backend Spring Boot valide la demande et réveille le Robot ROA.\newline
+    7. Le Robot ROA applique l'activation de la dotation sur la carte concernée dans le système d'autorisation.\newline
+    8. Le Robot ROA renvoie le statut (succès) au backend.\newline
+    9. Le ChatBot confirme au client l'activation immédiate de sa dotation. \\ \hline
+    Scénarios alternatifs & 
+    \textbf{A3. Plafond autorisé dépassé :}\newline
+    Si le client demande un montant supérieur à sa limite autorisée, le système de décision rejette la demande et notifie le client du maximum possible. \\ \hline
+    Post-conditions & La dotation E-Commerce est activée sur la carte bancaire du client. \\ \hline
+  \end{tabularx}
+  \caption{Description du cas d'utilisation - Activer la dotation E-Commerce}
+  \label{tab:cu_dotation_ecommerce}
+\end{table}
+
+\vspace{15pt}
+
+% ── CU 5 : Activer Dotation Touristique ─────────────────────
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{10pt}
+  \begin{tabularx}{\textwidth}{|>{\bfseries\color{white}\columncolor{boaGreen}}l|X|}
+    \hline
+    \multicolumn{2}{|>{\bfseries\color{white}\columncolor{boaGreen}}c|}{Cas d'utilisation : Déclencher une tâche RPA - Activer Dotation Touristique (CU-05)} \\ \hline
+    Acteurs & Client BOA / Utilisateur (Initiateur), Robot ROA / UiPath (Exécuteur) \\ \hline
+    Pré-conditions & 
+    - Le client est connecté au ChatBot.\newline
+    - Le client s'est authentifié sur le Portail BOA. \\ \hline
+    Scénario nominal & 
+    1. Le client demande l'activation de sa dotation touristique internationale.\newline
+    2. Le ChatBot initie l'authentification sécurisée.\newline
+    3. Le client sélectionne sa carte et indique le montant requis (dans la limite légale annuelle).\newline
+    4. Le système envoie un code de confirmation OTP.\newline
+    5. Le client saisit l'OTP valide.\newline
+    6. Le backend transmet la tâche d'activation de dotation internationale au Robot ROA.\newline
+    7. Le Robot ROA configure la dotation touristique sur la carte du client dans le système d'autorisation.\newline
+    8. Le Robot ROA retourne le succès de l'activation.\newline
+    9. Le ChatBot confirme au client que sa dotation est active pour ses transactions à l'étranger. \\ \hline
+    Scénarios alternatifs & 
+    \textbf{A3. Droits de dotation épuisés ou quota annuel atteint :}\newline
+    Le système ou le Robot identifie que le client a déjà consommé son droit annuel. L'opération est refusée et le client est averti par le ChatBot. \\ \hline
+    Post-conditions & La dotation touristique est allouée et activée sur le profil monétique du client. \\ \hline
+  \end{tabularx}
+  \caption{Description du cas d'utilisation - Activer la dotation touristique}
+  \label{tab:cu_dotation_touristique}
+\end{table}
+
+\vspace{15pt}
+
+% ── CU 6 : Administration du système ─────────────────────────
+\begin{table}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \setlength{\tabcolsep}{10pt}
+  \begin{tabularx}{\textwidth}{|>{\bfseries\color{white}\columncolor{boaGreen}}l|X|}
+    \hline
+    \multicolumn{2}{|>{\bfseries\color{white}\columncolor{boaGreen}}c|}{Cas d'utilisation : Administration du système (CU-06)} \\ \hline
+    Acteurs & Administrateur / Superviseur \\ \hline
+    Pré-conditions & 
+    L'administrateur s'est connecté et s'est authentifié sur le module Admin (AUTHENTIFICATION ADMIN). \\ \hline
+    Scénario nominal & 
+    1. L'administrateur accède au tableau de bord d'administration.\newline
+    2. Le système affiche les indicateurs clés et l'état de l'automatisation.\newline
+    3. L'administrateur choisit l'une des actions suivantes :\newline
+    \quad a. Consulter le Tableau de Bord pour suivre les métriques.\newline
+    \quad b. Consulter ou Supprimer des Historiques de discussion et de transactions.\newline
+    \quad c. Gérer les clients BOA (Consulter / Ajouter / Supprimer un profil client).\newline
+    4. Le système applique l'action et rafraîchit les vues. \\ \hline
+    Scénarios alternatifs & 
+    \textbf{A3. Échec de la suppression de client/historique :}\newline
+    Si l'action de suppression échoue en base de données (ex: contrainte d'intégrité), le système affiche un message d'erreur et conserve les données intactes. \\ \hline
+    Post-conditions & Les modifications administratives sont enregistrées en base de données et auditées. \\ \hline
+  \end{tabularx}
+  \caption{Description du cas d'utilisation - Administration}
+  \label{tab:cu_admin}
+\end{table}

@@ -1,0 +1,51 @@
+% --- SOUS-SECTION : STRUCTURE AGILE JIRA ---
+\subsection{Structure du Backlog Agile : Epics et Sprints}
+\label{subsec:structure_backlog_jira}
+
+Pour piloter notre projet d'automatisation sur Jira, nous avons découpé le projet en sept grandes thématiques (Epics) représentant les jalons techniques principaux. Le tableau~\ref{tab:epics_jira} résume ces Epics ainsi que leur planification chronologique.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|p{4.5cm}|c|c|c|p{3.5cm}|}
+\hline
+\textbf{ID} & \textbf{Nom de l'Epic} & \textbf{Prio.} & \textbf{Début} & \textbf{Fin} & \textbf{Description} \\ \hline
+EPIC-01 & Conception & Cadrage Technique & Must & 16-02-2026 & 01-03-2026 & Phases initiales de cadrage, analyse et architecture. \\ \hline
+EPIC-02 & Moteur de Chatbot & FAQ Excel & Must & 02-03-2026 & 15-03-2026 & Ingestion et API de recherche basées sur la FAQ Excel. \\ \hline
+EPIC-03 & NLP & Classification RAG / IA & Must & 16-03-2026 & 29-03-2026 & Classification intelligente IA et détection du périmètre N1-RR. \\ \hline
+EPIC-04 & Interface React & Dashboard Admin & Must & 30-03-2026 & 12-04-2026 & Développement de l'interface graphique utilisateur et administrateur. \\ \hline
+EPIC-05 & Intégration UiPath Orchestrator & Must & 13-04-2026 & 10-05-2026 & Connexion sécurisée API et déclenchement de jobs robotisés. \\ \hline
+EPIC-06 & Sécurisation & Simulation Métier & Should & 11-05-2026 & 24-05-2026 & Formulaires de démo et masquage des données sensibles. \\ \hline
+EPIC-07 & Recette, Déploiement & Clôture & Must & 25-05-2026 & 14-07-2026 & Tests de bout en bout, correctifs et rédaction de rapport PFE. \\ \hline
+\end{tabular}
+\caption{Structure des Epics du Projet sur Jira}
+\label{tab:epics_jira}
+\end{table}
+
+Le backlog détaillé, constitué de récits utilisateurs (User Stories) rattachés à chaque Epic avec leur priorité (Must/Should) et leur période de réalisation, est présenté dans le tableau~\ref{tab:stories_jira}.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{tabular}{|l|p{3.5cm}|p{3.5cm}|c|c|p{3.5cm}|}
+\hline
+\textbf{ID} & \textbf{Titre de la Story} & \textbf{Epic Parent} & \textbf{Prio.} & \textbf{Sprint} & \textbf{Critère d'acceptation} \\ \hline
+US-01 & Analyse des besoins de la hotline BOA & Conception & Cadrage Technique & Must & Sprint 1 & Liste des processus N1-RR éligibles validée. \\ \hline
+US-02 & Mise en place de l'architecture technique & Conception & Cadrage Technique & Must & Sprint 1 & Workspace Git configuré, compilation ok. \\ \hline
+US-03 & Parser de base FAQ Excel & Moteur de Chatbot & FAQ Excel & Must & Sprint 2 & Fichier Excel parsé par Apache POI sans erreur. \\ \hline
+US-04 & API de recherche FAQ par mot-clé & Moteur de Chatbot & FAQ Excel & Must & Sprint 2 & Temps de réponse < 500ms sur la recherche. \\ \hline
+US-05 & Classification RAG / NLP intelligente & NLP & Classification RAG / IA & Must & Sprint 3 & Précision de classification > 85%. \\ \hline
+US-06 & Détection automatique de demande RPA N1-RR & NLP & Classification RAG / IA & Must & Sprint 3 & Les cas N1-RR sont correctement flaggés pour exécution RPA. \\ \hline
+US-07 & Interface graphique de Chat React & Interface React & Dashboard Admin & Must & Sprint 4 & Interface de chat responsive, bulles de messages fluides. \\ \hline
+US-08 & Base SQL d'historique des conversations & Interface React & Dashboard Admin & Must & Sprint 4 & Sessions de chat persistées en base PostgreSQL / H2. \\ \hline
+US-09 & Authentification OAuth2 à l'Orchestrator Cloud & Intégration UiPath Orchestrator & Must & Sprint 5 & Jeton bearer récupéré et rafraîchi avec client_id/secret. \\ \hline
+US-10 & API de déclenchement de job RPA & Intégration UiPath Orchestrator & Must & Sprint 6 & Statut 201 Created retourné avec la clé unique du job. \\ \hline
+US-11 & Suivi de statut du robot en temps réel & Intégration UiPath Orchestrator & Must & Sprint 6 & Polling backend fonctionnel avec statuts : In Progress / Success. \\ \hline
+US-12 & Formulaires de simulation bancaire & Sécurisation & Simulation Métier & Should & Sprint 7 & Validation de champs côté React, payload JSON envoyé au backend. \\ \hline
+US-13 & Masquage et sécurité des données bancaires & Sécurisation & Simulation Métier & Must & Sprint 7 & Masquage par regex dans les logs et la DB (ex: **** **** **** 1234). \\ \hline
+US-14 & Tests d'intégration bout en bout & Recette, Déploiement & Clôture & Must & Sprint 8 & Parcours complet validé avec succès sans crash. \\ \hline
+US-15 & Déploiement pilote & Rapport final PFE & Recette, Déploiement & Clôture & Must & Phase Finale & Rapport PFE complet validé par les encadrants. \\ \hline
+\end{tabular}
+\caption{Backlog Détaillé des User Stories du Projet}
+\label{tab:stories_jira}
+\end{table}

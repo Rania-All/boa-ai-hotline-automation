@@ -10,6 +10,10 @@ public class IntentDetector {
         if (text == null) return Intent.UNKNOWN;
         text = TextNorm.norm(text);
 
+        if (text.matches("^(bonjour|salut|hello|hey|salam|bonsoir|coucou).*")) {
+            return Intent.GREETING;
+        }
+
         // RPA N1-RR (exemples: attestations, relevés, documents)
         if (text.contains("attestation") || text.contains("relev") || text.contains("document")
                 || (text.contains("modifier") && text.contains("coordonn"))) {

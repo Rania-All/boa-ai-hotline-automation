@@ -1,0 +1,94 @@
+% ============================================================
+%  Section 2.3.1 – Acteurs du système
+%  Projet : BOA AI Hotline Automation
+% ============================================================
+
+% Packages requis (à placer dans le préambule si pas déjà présents)
+% \usepackage[table,xcdraw]{xcolor}
+% \usepackage{booktabs}
+% \usepackage{array}
+% \usepackage{tabularx}
+% \usepackage{tcolorbox}
+% \usepackage{fontawesome5}  % pour l'icône guideline (optionnel)
+
+% ── Couleurs BOA ────────────────────────────────────────────
+\definecolor{boaGreen}{HTML}{2E7D32}       % vert foncé entête
+\definecolor{boaLightGreen}{HTML}{C8E6C9}  % vert clair lignes paires
+\definecolor{boaGray}{HTML}{F5F5F5}        % gris très clair lignes impaires
+\definecolor{guidelineBg}{HTML}{F1F8E9}    % fond bloc guideline
+\definecolor{guidelineBorder}{HTML}{558B2F}% bordure bloc guideline
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Acteurs du système}
+% ─────────────────────────────────────────────────────────────
+
+% ── Bloc Guideline ──────────────────────────────────────────
+\begin{tcolorbox}[
+  colback   = guidelineBg,
+  colframe  = guidelineBorder,
+  left      = 6pt,
+  right     = 6pt,
+  top       = 4pt,
+  bottom    = 4pt,
+  arc       = 2pt,
+  boxrule   = 0.8pt
+]
+  \textbf{\faBookmark\; Guideline :}
+  \textit{Identifiez tous les acteurs (humains et systèmes externes)
+  qui interagissent avec votre application.}
+\end{tcolorbox}
+
+\vspace{6pt}
+
+% ── Tableau des acteurs ──────────────────────────────────────
+\begin{table}[h!]
+  \centering
+  \renewcommand{\arraystretch}{1.6}   % hauteur des lignes
+  \setlength{\tabcolsep}{10pt}
+
+  \begin{tabularx}{\textwidth}{
+      >{\bfseries}p{4.5cm}   % colonne Acteur (gras)
+      X                       % colonne Rôle (extensible)
+    }
+
+    % ── En-tête ────────────────────────────────────────────
+    \rowcolor{boaGreen}
+    \textcolor{white}{Acteur} & \textcolor{white}{Rôle} \\
+
+    % ── Ligne 1 : Client BOA / Utilisateur ─────────────────
+    \rowcolor{boaGray}
+    Client BOA / Utilisateur
+    &
+    Acteur humain principal. Il interagit avec le \textbf{ChatBot BOA}
+    pour poser des questions (FAQ), déclencher des tâches RPA bancaires
+    (virement, déblocage de carte, activation de dotation E-Commerce
+    ou touristique) après authentification via le \textbf{Portail BOA}.
+    \\
+
+    % ── Ligne 2 : Administrateur / Superviseur ─────────────
+    \rowcolor{boaLightGreen}
+    Administrateur / Superviseur
+    &
+    Acteur humain interne à BOA. Il accède au système via
+    le \textbf{Portail Admin} pour consulter le tableau de bord,
+    gérer les historiques des interactions (consulter / supprimer)
+    et administrer les comptes clients BOA
+    (consulter / ajouter / supprimer).
+    \\
+
+    % ── Ligne 3 : Robot RPA (UiPath) ───────────────────────
+    \rowcolor{boaGray}
+    Robot RPA (UiPath)
+    &
+    Acteur système externe. Il s'agit du robot UiPath (Robot ROA)
+    chargé d'exécuter automatiquement les tâches bancaires déclenchées
+    par le ChatBot : virements, déblocages de carte, activations
+    de dotations. Il reçoit les instructions via le service
+    d'authentification et les API REST du backend.
+    \\
+
+  \end{tabularx}
+
+  \caption{Acteurs du système}
+  \label{tab:acteurs}
+\end{table}

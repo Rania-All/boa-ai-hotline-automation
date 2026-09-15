@@ -6,6 +6,7 @@ import History from './pages/History';
 import Chat from './pages/Chat';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginChatbot from './pages/LoginChatbot';
+import Settings from './pages/Settings';
 
 // Bank Imports
 import BankLayout from './components/bank/BankLayout';
@@ -20,13 +21,13 @@ function ChatbotApp() {
   const userStr = localStorage.getItem('boa_bank_current_user');
   
   if (!userStr) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const user = JSON.parse(userStr);
   const role = user?.role || 'user';
 
-  const [currentPage, setCurrentPage] = useState<'chat' | 'history' | 'admin'>(
+  const [currentPage, setCurrentPage] = useState<'chat' | 'history' | 'admin' | 'settings'>(
     role === 'admin' ? 'admin' : 'chat'
   );
 
@@ -58,18 +59,24 @@ function ChatbotApp() {
         <div style={{ display: currentPage === 'admin' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
           <AdminDashboard />
         </div>
+        <div style={{ display: currentPage === 'settings' ? 'flex' : 'none', flex: 1, height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
+          <Settings onBackToChat={() => setCurrentPage('chat')} />
+        </div>
       </main>
     </div>
   );
 }
+
 
 function App() {
   const userStr = localStorage.getItem('boa_bank_current_user');
   
   return (
     <Routes>
-      <Route path="/" element={userStr ? <ChatbotApp /> : <Navigate to="/login" replace />} />
-      <Route path="/login" element={<LoginChatbot />} />
+      <Route path="/" element={<LoginChatbot />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/chat" element={userStr ? <ChatbotApp /> : <Navigate to="/" replace />} />
+      
       <Route path="/bank/login" element={<BankLogin />} />
       <Route path="/bank/register" element={<BankRegister />} />
       <Route path="/bank" element={<BankLayout />}>
