@@ -22,9 +22,10 @@ export default function LoginChatbot() {
   const [loading, setLoading] = useState(false);
   
   React.useEffect(() => {
-    // Si on arrive sur la page de login, on s'assure d'être déconnecté
-    localStorage.removeItem('boa_bank_current_user');
-    localStorage.removeItem('chatSessionId');
+    // Si l'utilisateur est déjà connecté, on le redirige vers le chat
+    if (localStorage.getItem('boa_bank_current_user')) {
+      window.location.href = '/chat';
+    }
   }, []);
 
   // Form states

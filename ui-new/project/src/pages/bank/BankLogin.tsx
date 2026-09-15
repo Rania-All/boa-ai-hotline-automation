@@ -29,11 +29,7 @@ const BankLogin = () => {
       localStorage.setItem('boa_bank_current_user', JSON.stringify(user));
       localStorage.removeItem('chatSessionId');
       
-      if (user.role === 'admin') {
-        navigate('/');
-      } else {
-        navigate('/bank/dashboard');
-      }
+      navigate('/bank/dashboard');
     } else {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
